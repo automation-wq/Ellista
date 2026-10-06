@@ -62,7 +62,7 @@ The site is then at `https://<project-name>.vercel.app`, and every push to `main
 | Sample catalogue | `public/seed-data.js` | 9 sample products. Loaded into `data/products.json` on first start |
 | Clips | `public/img/v-*.mp4` | Three free Pexels clips behind the hero slides and category tiles (free licence, commercial use) |
 | Web standards | `server.js` | Server-written SEO and sharing tags, schema.org product data, sitemap and robots files, gzip and caching, security headers, web app manifest (see TRD section 10) |
-| Tests | `test.js`, `test-ui.js` | `node test.js` checks the API (orders, stock, accounts, admin, request safety). `node test-ui.js` drives a real headless Edge or Chrome through the menus, cart, keyboard and phone taps |
+| Tests | `test.js`, `test-ui.js`, `test-vercel.js` | `node test.js` checks the API (orders, stock, accounts, admin, request safety). `node test-vercel.js` checks the Vercel entry. `node test-ui.js` drives a real headless Edge or Chrome through the menus, cart, keyboard and phone taps |
 
 ## Documents
 
