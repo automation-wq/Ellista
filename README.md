@@ -44,13 +44,15 @@ With the store running, double-click `go-live.bat`. It opens a free Cloudflare q
 
 ### Put it on Vercel (public link that stays up)
 
-The repo deploys as-is: `api/index.js` runs `server.js` as one Vercel function and `vercel.json` routes every address to it.
+Live demo: **https://mytekkstore.vercel.app** (Vercel team blooprint-ai, free Hobby plan, deployed 2026-10-06; every push to `main` redeploys it).
+
+The repo deploys as-is: `api/index.js` runs `server.js` as one Vercel function. `vercel.json` sends the pages, robots and sitemap through it (so the SEO tags and security headers are written as on your own server) and serves scripts, styles and photos straight from Vercel's CDN.
 
 1. Push the code to GitHub (this repo: https://github.com/automation-wq/Mytekkstore).
 2. At https://vercel.com/new import the repository, leave every setting as detected, and click Deploy.
 3. In the Vercel project open Settings, Environment Variables, and add `ADMIN_PASSWORD` (sign in at `/admin.html` as admin@mytekkstore.local with it). Add `OTP_DEMO=1` if the walkthrough should show sign-in codes on screen. Redeploy once after adding them.
 
-The site is then at `https://<project-name>.vercel.app`, and every push to `main` deploys again. Vercel has no disk: orders, accounts, admin edits and uploaded photos last only until Vercel starts a fresh copy (after a few minutes with no visitors). That is fine for showing the store; move the data to a database before taking real orders.
+The site is then at `https://<project-name>.vercel.app`, and every push to `main` deploys again. Set the Root Directory to the repository root and the preset to Other if Vercel guesses `web` and Vite. Vercel has no disk: orders, accounts, admin edits and uploaded photos last only until Vercel starts a fresh copy (after a few minutes with no visitors). That is fine for showing the store; move the data to a database before taking real orders.
 
 ## How it works
 
