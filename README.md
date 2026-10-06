@@ -57,7 +57,7 @@ The site is then at `https://<project-name>.vercel.app`, and every push to `main
 | Part | File | What it does |
 |---|---|---|
 | Server | `server.js` | Serves the pages and the `/api/...` routes. Products, orders and accounts are saved as JSON files in `data/`. Prices and stock are always checked on the server, never trusted from the browser |
-| Storefront | `web/src` (React: components, pages, store, motion, stylesheet), built into `public/` | Home, category pages with explore-by-size tiles and the TV size guide, product pages, festive offers page with bank offers and No Cost EMI, cart drawer, checkout, sign-in page (mobile code, email, Google), account, order page, info pages. The header category menus open by hovering (mouse), one tap (phone) or Tab (keyboard) |
+| Storefront | `web/src` (React 19: components, pages, store, stylesheet; animations with Motion from motion.dev in `motion.js`, `home.jsx` and `components.jsx`), built into `public/` | Home, category pages with explore-by-size tiles and the TV size guide, product pages, festive offers page with bank offers and No Cost EMI, cart drawer, checkout, sign-in page (mobile code, email, Google), account, order page, info pages. The header category menus open by hovering (mouse), one tap (phone) or Tab (keyboard) |
 | Admin | `web/src/admin.jsx` | Orders and order status, products with photo upload and the No Cost EMI flag, outbox of customer messages with their sent status |
 | Sample catalogue | `public/seed-data.js` | 9 sample products. Loaded into `data/products.json` on first start |
 | Clips | `public/img/v-*.mp4` | Three free Pexels clips behind the hero slides and category tiles (free licence, commercial use) |

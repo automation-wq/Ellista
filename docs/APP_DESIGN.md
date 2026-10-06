@@ -130,6 +130,8 @@ Rules for generated images: no brand logos or brand names inside the image, same
 
 Everything here switches off when the device asks for reduced motion.
 
+Since 2026-10-06 the storefront's motion runs on **Motion** (motion.dev, the `motion` package, React 19): the hero parts and headline words rise on springs with a stagger (variants in `web/src/home.jsx`), sections fade and rise as they scroll in and the numbers count up through Motion's `inView` and `animate` (`web/src/motion.js`), the cart drawer slides on a spring, the toast pops in and out with `AnimatePresence`, the top progress line is a sprung scroll value (`Chrome` in `web/src/components.jsx`), and the add-to-cart photo flies with `animate`. `MotionConfig reducedMotion="user"` in `main.jsx` makes every Motion animation honour the visitor's setting. Hover tilts, Ken Burns zooms, glows and the scroll-driven parallax stay in CSS. If the bundle size matters later, switch to `LazyMotion` with `domAnimation` and the `m` components (about 20 KB gzip smaller).
+
 ### 8.1 What moves today
 
 - Hero: slides fade every 5 seconds and pause on hover, with a progress bar that fills under the active slide; the headline rises word by word; the picture zooms slowly and drifts toward the pointer (parallax); a soft aurora light drifts over it; the headline shimmers; the spotlight card floats gently; the whole banner shrinks a little as you scroll past it. Video is used only in the Top features bands, where it sits faintly behind the tiles.

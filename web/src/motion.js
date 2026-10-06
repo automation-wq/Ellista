@@ -1,20 +1,34 @@
-// Page motion that works on the rendered DOM: reveals, room clips, strips, scroll chrome. Each helper is safe to call again
-// after a page draws more content.
+// Page motion on the rendered DOM, built on Motion (motion.dev): reveals, numbers that count up, room clips, strips, scroll
+// chrome and the fly-to-cart. Each helper is safe to call again after a page draws more content.
+import { animate, inView } from "motion";
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+export const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const EASE = [.2, .8, .2, 1];
 
-// fade sections in as they scroll into view
-let revealIO;
+// sections fade and rise as they scroll into view; the CSS keyed on .reveal.in staggers the cards, headings and icons inside them
 export function reveal() {
-  revealIO = revealIO || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); revealIO.unobserve(e.target); } }), { rootMargin: "0px 0px -40px" });
   $$("main > section, main > .hero, main > .pdp, main > .plp, main > .box, main > .cols, main > .fest, main > .auth, main > .kv").forEach(el => {
     if (el.classList.contains("reveal")) return;
-    el.classList.add("reveal"); revealIO.observe(el);
+    el.classList.add("reveal");
+    if (reduced()) return el.classList.add("in");
+    el.style.opacity = 0; // hidden until it scrolls in, so it never flashes before the animation starts
+    inView(el, () => { el.classList.add("in"); animate(el, { opacity: [0, 1], y: [24, 0] }, { duration: .7, ease: EASE }); }, { margin: "0px 0px -40px" });
+  });
+}
+
+// numbers roll up from 0 the first time they scroll into view
+export function countUp(root) {
+  $$("[data-n]", root).forEach(el => {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    if (reduced()) { el.textContent = el.dataset.n; return; }
+    inView(el, () => { animate(0, +el.dataset.n, { duration: 1.4, ease: "circOut", onUpdate: v => { el.textContent = Math.round(v); } }); }, { amount: .6 });
   });
 }
 
 // looping background clips: loaded only when needed, never on data saver or reduced motion (the poster photo stays instead)
-export const clipsOk = !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator.connection && navigator.connection.saveData);
+export const clipsOk = !reduced() && !(navigator.connection && navigator.connection.saveData);
 export function playClip(v) {
   if (!clipsOk) return;
   if (!v.src) { v.src = v.dataset.src; v.onplaying = () => v.classList.add("playing"); }
@@ -29,16 +43,12 @@ export function lazyClips() {
 // rows that fit on the screen need no scroll arrows
 export const fitStrips = () => $$(".strip").forEach(x => { const r = $(".row", x); if (r) x.classList.toggle("nos", r.scrollWidth <= r.clientWidth + 2); });
 
-// window-level listeners, attached once: scroll progress, back-to-top, card tilt and light
+// window-level listeners, attached once: back-to-top, card tilt and light (the scroll progress line is a Motion value in Chrome)
 let chromeDone = false;
 export function chrome() {
   if (chromeDone) return;
   chromeDone = true;
-  addEventListener("scroll", () => {
-    const h = document.documentElement;
-    document.body.classList.toggle("scrolled", h.scrollTop > 300);
-    document.documentElement.style.setProperty("--p", h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight));
-  }, { passive: true });
+  addEventListener("scroll", () => document.body.classList.toggle("scrolled", document.documentElement.scrollTop > 300), { passive: true });
   // soft light follows the pointer across a product card, and the card tilts a little toward it (hover devices only, see CSS)
   document.addEventListener("pointermove", e => {
     const c = e.target.closest && e.target.closest(".card");
@@ -56,14 +66,13 @@ export function chrome() {
   addEventListener("resize", fitStrips);
 }
 
-// the product photo flies to the cart icon when something is added
+// the product photo flies to the cart icon when something is added: a copy shrinks toward the icon's centre, then goes away
 export function fly(btn) {
   const img = btn.closest(".card, .pdp")?.querySelector(".img img"), target = $("[data-drawer]");
-  if (!img || !target || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!img || !target || reduced()) return;
   const from = img.getBoundingClientRect(), to = target.getBoundingClientRect(), ghost = img.cloneNode();
-  Object.assign(ghost.style, { position: "fixed", left: from.left + "px", top: from.top + "px", width: from.width + "px", height: from.height + "px", zIndex: 50,
-    borderRadius: "12px", pointerEvents: "none", objectFit: "contain", background: "#fff", transition: "all .7s cubic-bezier(.5,-0.2,.3,1)" });
+  Object.assign(ghost.style, { position: "fixed", left: from.left + "px", top: from.top + "px", width: from.width + "px", height: from.height + "px", zIndex: 50, borderRadius: "12px", pointerEvents: "none", objectFit: "contain", background: "#fff" });
   document.body.append(ghost);
-  requestAnimationFrame(() => requestAnimationFrame(() => Object.assign(ghost.style, { left: to.left + "px", top: to.top + "px", width: "24px", height: "24px", opacity: ".25" })));
-  setTimeout(() => ghost.remove(), 750);
+  animate(ghost, { x: to.left + to.width / 2 - (from.left + from.width / 2), y: to.top + to.height / 2 - (from.top + from.height / 2), scale: 24 / Math.max(from.width, 1), opacity: .25 },
+    { duration: .7, ease: [.5, -.2, .3, 1] }).finished.then(() => ghost.remove());
 }

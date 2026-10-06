@@ -1,5 +1,6 @@
 // Shared pieces: icons, product card, rows, forms, header with the category menus, footer, cart drawer, toast.
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useScroll, useSpring } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
 import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, GUIDES, CAT_SIZE, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta } from "./data.js";
@@ -243,17 +244,22 @@ function MobileNav() {
   return <nav className="mnav" aria-label="Quick links">{items.map(([h, i, t, on]) => <a href={h} className={on ? "on" : undefined} aria-current={on ? "page" : undefined} key={h}><Icon k={i} />{t}{i === "cart" && n > 0 && <span className="count">{n}</span>}</a>)}</nav>;
 }
 
+// the drawer slides on a spring, the toast pops in and out, and the progress line follows a sprung scroll value (Motion)
+const SPRING = { type: "spring", stiffness: 320, damping: 32 };
+const DRAWER = { open: { x: 0, visibility: "visible" }, closed: { x: "100%", transitionEnd: { visibility: "hidden" } } };
 export function Chrome() {
-  const { cart, byId, money, cartCount, cartTotal, toastState } = useStore();
+  const { cart, byId, money, cartCount, cartTotal, toastState, cartOpen } = useStore();
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: .4 });
   const n = cartCount();
   return <>
     <div className="navshade"></div><div className="overlay" data-close></div>
-    <aside className="drawer" aria-label="Cart"><h2>Your cart (<span>{n}</span>) <button className="x" data-close aria-label="Close cart">×</button></h2><div className="dbody">{n ? <>
+    <motion.aside className="drawer" aria-label="Cart" initial={false} animate={cartOpen ? "open" : "closed"} variants={DRAWER} transition={SPRING}><h2>Your cart (<span>{n}</span>) <button className="x" data-close aria-label="Close cart">×</button></h2><div className="dbody">{n ? <>
       <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
       <div className="dfoot"><div className="tot"><span>Subtotal</span><b>{money(cartTotal())}</b></div><a className="btn" href="checkout.html">Checkout</a><a className="btn ghost" href="cart.html">View cart</a></div></>
-      : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></aside>
-    <div className={"toast" + (toastState.msg ? " on" : "")} role="status"><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</div>
+      : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></motion.aside>
+    <AnimatePresence>{toastState.msg && <motion.div className="toast on" role="status" key="toast" style={{ x: "-50%" }} initial={{ y: 90, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 90, opacity: 0 }} transition={SPRING}><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</motion.div>}</AnimatePresence>
     <MobileNav />
-    <div className="progress"></div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
+    <motion.div className="progress" style={{ scaleX: progress }}></motion.div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
   </>;
 }

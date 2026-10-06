@@ -1,13 +1,17 @@
-// Home page: kinetic hero with a spotlight product, numbers that count up, category tiles, a "built for your home" bento,
+// Home page: kinetic hero (Motion springs, word by word) with a spotlight product, numbers that count up, category tiles, a "built for your home" bento,
 // deals, one block per category (banner plus four products, the Samsung home-page pattern), brands, customer quotes, bank
 // offers, festive banner, why-us and a Good to know list. Marketing lines come from TOP_FEATURES so they only claim what the catalogue supports.
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { useStore } from "./store.jsx";
+import { countUp } from "./motion.js";
 import { Card, Row, BankOffers, Ico } from "./components.jsx";
 import { DRAW_ICONS, CAT_SIZE, BANK_OFFERS, KV_IMG, TOP_FEATURES, GUIDES, FAQ, catSizes, catUrl, brandUrl, listUrl, off, starRow } from "./data.js";
 
-const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+// hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
+const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
+const WORDS = { hide: {}, show: { transition: { staggerChildren: .06, delayChildren: .1 } } };
+const GROUP = { hide: {}, show: { transition: { staggerChildren: .12 } } };
 
 // [headline lines, line, category, banner image]. Banners are generated for this store (see docs/APP_DESIGN.md section 7)
 const SLIDES = [
@@ -16,30 +20,13 @@ const SLIDES = [
   { h: ["Beat the heat."], s: "Inverter ACs with big savings.", c: "Air Conditioners", im: "hero2" },
 ];
 
-// numbers roll up from 0 the first time they scroll into view
-function useCountUp(ref) {
-  useEffect(() => {
-    const els = $$("[data-n]", ref.current);
-    if (reduced()) { els.forEach(el => { el.textContent = el.dataset.n; }); return; }
-    const io = new IntersectionObserver(es => es.forEach(e => {
-      if (!e.isIntersecting) return;
-      io.unobserve(e.target);
-      const el = e.target, end = +el.dataset.n, t0 = performance.now();
-      const step = t => { const k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(end * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(step); };
-      requestAnimationFrame(step);
-    }), { threshold: .6 });
-    els.forEach(el => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-}
-
 export function Home() {
   const { P, CATS, BRANDS, catImg, recent, byId, money } = useStore();
   const [cur, setCur] = useState(0);
   const heroRef = useRef(), numRef = useRef();
   const show = n => setCur((n + SLIDES.length) % SLIDES.length);
   useEffect(() => { const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % SLIDES.length); }, 5000); return () => clearInterval(t); }, []);
-  useCountUp(numRef);
+  useEffect(() => countUp(numRef.current), []); // numbers roll up from 0 the first time they scroll into view
 
   const inCat = c => P.filter(p => p.cat === c);
   const lowest = c => { const ps = inCat(c); return ps.length ? Math.min(...ps.map(p => p.price)) : 0; };
@@ -67,13 +54,13 @@ export function Home() {
   ];
   return <>
     <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
-      {SLIDES.map((sl, i) => { const spot = bestDeal(sl.c); return <div className={"slide" + (i === cur ? " on" : "")} key={sl.c}>
-        <div className="bg" style={{ backgroundImage: `url(img/${sl.im}.jpg)` }}></div><span className="eyebrow">{sl.c}</span>
-        <h1>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <span className="w" style={{ "--i": j * 3 + k }} key={k}>{w}&nbsp;</span>)}</span>)}</h1>
-        <p>{sl.s}</p>
-        <div className="hcta"><a className="btn" href={catUrl(sl.c)}>Shop now</a><a className="btn ghost" href={listUrl({ cat: sl.c, sort: "off" })}>See deals</a></div>
-        {spot && <a className="spot" href={"product.html?id=" + spot.id}><img src={spot.img} alt="" loading={i ? "lazy" : "eager"} /><span><small>{spot.brand}</small><b>{spot.name}</b><i>{money(spot.price)}{off(spot) > 0 && <em>{off(spot)}% off</em>}</i></span></a>}
-      </div>; })}
+      {SLIDES.map((sl, i) => { const spot = bestDeal(sl.c); return <motion.div className={"slide" + (i === cur ? " on" : "")} key={sl.c} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP}>
+        <div className="bg" style={{ backgroundImage: `url(img/${sl.im}.jpg)` }}></div><motion.span className="eyebrow" variants={RISE}>{sl.c}</motion.span>
+        <motion.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <motion.span className="w" variants={RISE} key={k}>{w}&nbsp;</motion.span>)}</span>)}</motion.h1>
+        <motion.p variants={RISE}>{sl.s}</motion.p>
+        <motion.div className="hcta" variants={RISE}><a className="btn" href={catUrl(sl.c)}>Shop now</a><a className="btn ghost" href={listUrl({ cat: sl.c, sort: "off" })}>See deals</a></motion.div>
+        {spot && <motion.a className="spot" variants={RISE} href={"product.html?id=" + spot.id}><img src={spot.img} alt="" loading={i ? "lazy" : "eager"} /><span><small>{spot.brand}</small><b>{spot.name}</b><i>{money(spot.price)}{off(spot) > 0 && <em>{off(spot)}% off</em>}</i></span></motion.a>}
+      </motion.div>; })}
       <button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{SLIDES.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>
     </div>
