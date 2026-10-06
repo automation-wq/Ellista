@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+/* the Inter font is linked from the HTML head (web/shells.js) so it downloads alongside this stylesheet, not after it */
 /* White theme. --soft is body copy, --on is text on top of the accent colour. Change --accent to the client's brand colour. */
 :root { --bg:#f4f5f7; --head:#ffffff; --card:#ffffff; --line:#e2e5ea; --text:#15181e; --soft:#3f4652; --muted:#6b7280; --accent:#08805f; --on:#ffffff; }
 * { box-sizing:border-box; margin:0 }

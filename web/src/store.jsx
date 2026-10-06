@@ -25,9 +25,8 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     (async () => {
-      const products = (await api("products")).products;
-      const user = (await api("me")).user;
-      const cfg = await api("config"); // which optional services (Google sign-in, SMS, email) are switched on
+      // the three startup calls go out together (one round trip, not three); cfg says which optional services (Google sign-in, SMS, email) are on
+      const [{ products }, { user }, cfg] = await Promise.all([api("products"), api("me"), api("config")]);
       const byId = id => products.find(p => p.id === +id);
       // keep only cart items that still exist and are in stock
       setCart(Object.fromEntries(Object.entries(load("cart", {})).filter(([id, q]) => byId(id) && byId(id).stock > 0 && q > 0).map(([id, q]) => [id, Math.min(q, byId(id).stock, 10)])));

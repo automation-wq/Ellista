@@ -46,7 +46,7 @@ With the store running, double-click `go-live.bat`. It opens a free Cloudflare q
 
 The repo deploys as-is: `api/index.js` runs `server.js` as one Vercel function and `vercel.json` routes every address to it.
 
-1. Push the code to GitHub (this repo: https://github.com/automation-wq/Ellista).
+1. Push the code to GitHub (this repo: https://github.com/automation-wq/Mytekkstore).
 2. At https://vercel.com/new import the repository, leave every setting as detected, and click Deploy.
 3. In the Vercel project open Settings, Environment Variables, and add `ADMIN_PASSWORD` (sign in at `/admin.html` as admin@mytekkstore.local with it). Add `OTP_DEMO=1` if the walkthrough should show sign-in codes on screen. Redeploy once after adding them.
 

@@ -2,7 +2,7 @@
 // deals, one block per category (banner plus four products, the Samsung home-page pattern), brands, customer quotes, bank
 // offers, festive banner, why-us and a Good to know list. Marketing lines come from TOP_FEATURES so they only claim what the catalogue supports.
 import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useStore } from "./store.jsx";
 import { countUp } from "./motion.js";
 import { Card, Row, BankOffers, Ico } from "./components.jsx";
@@ -54,13 +54,13 @@ export function Home() {
   ];
   return <>
     <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
-      {SLIDES.map((sl, i) => { const spot = bestDeal(sl.c); return <motion.div className={"slide" + (i === cur ? " on" : "")} key={sl.c} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP}>
-        <div className="bg" style={{ backgroundImage: `url(img/${sl.im}.jpg)` }}></div><motion.span className="eyebrow" variants={RISE}>{sl.c}</motion.span>
-        <motion.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <motion.span className="w" variants={RISE} key={k}>{w}&nbsp;</motion.span>)}</span>)}</motion.h1>
-        <motion.p variants={RISE}>{sl.s}</motion.p>
-        <motion.div className="hcta" variants={RISE}><a className="btn" href={catUrl(sl.c)}>Shop now</a><a className="btn ghost" href={listUrl({ cat: sl.c, sort: "off" })}>See deals</a></motion.div>
-        {spot && <motion.a className="spot" variants={RISE} href={"product.html?id=" + spot.id}><img src={spot.img} alt="" loading={i ? "lazy" : "eager"} /><span><small>{spot.brand}</small><b>{spot.name}</b><i>{money(spot.price)}{off(spot) > 0 && <em>{off(spot)}% off</em>}</i></span></motion.a>}
-      </motion.div>; })}
+      {SLIDES.map((sl, i) => { const spot = bestDeal(sl.c); return <m.div className={"slide" + (i === cur ? " on" : "")} key={sl.c} initial="hide" animate={i === cur ? "show" : "hide"} variants={GROUP}>
+        <div className="bg" style={{ backgroundImage: `url(img/${sl.im}.jpg)` }}></div><m.span className="eyebrow" variants={RISE}>{sl.c}</m.span>
+        <m.h1 variants={WORDS}>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <m.span className="w" variants={RISE} key={k}>{w}&nbsp;</m.span>)}</span>)}</m.h1>
+        <m.p variants={RISE}>{sl.s}</m.p>
+        <m.div className="hcta" variants={RISE}><a className="btn" href={catUrl(sl.c)}>Shop now</a><a className="btn ghost" href={listUrl({ cat: sl.c, sort: "off" })}>See deals</a></m.div>
+        {spot && <m.a className="spot" variants={RISE} href={"product.html?id=" + spot.id}><img src={spot.img} alt="" loading={i ? "lazy" : "eager"} /><span><small>{spot.brand}</small><b>{spot.name}</b><i>{money(spot.price)}{off(spot) > 0 && <em>{off(spot)}% off</em>}</i></span></m.a>}
+      </m.div>; })}
       <button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
       <div className="dots">{SLIDES.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>
     </div>

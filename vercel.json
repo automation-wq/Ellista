@@ -1,6 +1,10 @@
 {
   "regions": ["bom1"],
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "routes": [
+    { "src": "^/(|.*\\.html|robots\\.txt|sitemap\\.xml)$", "dest": "/api/index" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/index" }
+  ],
   "functions": { "api/index.js": { "includeFiles": "public/**" } },
   "build": { "env": { "NODEJS_HELPERS": "0" } }
 }

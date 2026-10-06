@@ -1,7 +1,7 @@
 // Category, brand, search and wishlist lists: lifestyle headline, explore tiles, size tabs, faceted filters (brand, price,
 // discount, stock, EMI, rating) that apply at once and stay in the address, applied-filter chips, sort, Top features, TV size guide.
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { qs } from "./api.js";
 import { Card, Box, Icon } from "./components.jsx";
@@ -72,7 +72,7 @@ export function Category() {
     <div className="ptool"><p className="muted">{nText}{q ? ' · "' + q + '"' : ""}</p>
       {!wishOnly && <button type="button" className="btn ghost fbtn" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="filters"><Icon k="sliders" /> Filters{chips.length ? " (" + chips.length + ")" : ""}</button>}
       <label className="sortby">Sort by <select value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="off">Biggest discount</option></select></label></div>
-    {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <motion.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></motion.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
+    {chips.length > 0 && <div className="chips" aria-label="Applied filters"><AnimatePresence>{chips.map(([t, rm]) => <m.button type="button" className="fchip" onClick={rm} aria-label={"Remove " + t} key={t} layout initial={{ opacity: 0, scale: .8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .8 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>{t} <span aria-hidden="true">×</span></m.button>)}</AnimatePresence><button type="button" className="link" onClick={clear}>Clear all</button></div>}
     <div className="plp">
       <div className="foverlay" onClick={() => setOpen(false)}></div>
       {!wishOnly && <aside className="filters" id="filters" aria-label="Filters">

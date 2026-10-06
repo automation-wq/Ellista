@@ -12,8 +12,8 @@ export function reveal() {
     if (el.classList.contains("reveal")) return;
     el.classList.add("reveal");
     if (reduced()) return el.classList.add("in");
-    el.style.opacity = 0; // hidden until it scrolls in, so it never flashes before the animation starts
-    inView(el, () => { el.classList.add("in"); animate(el, { opacity: [0, 1], y: [24, 0] }, { duration: .7, ease: EASE }); }, { margin: "0px 0px -40px" });
+    Object.assign(el.style, { opacity: 0, transform: "translateY(16px)" }); // starts hidden and a little low, so nothing flashes or jumps before the animation
+    inView(el, () => { el.classList.add("in"); animate(el, { opacity: [0, 1], y: [16, 0] }, { duration: .7, ease: EASE }); }, { margin: "0px 0px -40px" });
   });
 }
 

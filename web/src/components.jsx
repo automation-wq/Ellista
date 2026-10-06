@@ -1,6 +1,6 @@
 // Shared pieces: icons, product card, rows, forms, header with the category menus, footer, cart drawer, toast.
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from "motion/react";
+import { m, AnimatePresence, useScroll, useSpring, useReducedMotion } from "motion/react";
 import { animate, stagger } from "motion";
 import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
@@ -31,7 +31,7 @@ export function Buy({ p }) {
 export function Heart({ p }) {
   const { wish } = useStore();
   const on = wish.includes(p.id);
-  return <motion.button className={"heart" + (on ? " on" : "")} data-wish={p.id} aria-label="Save to wishlist" aria-pressed={on} initial={false} whileTap={{ scale: .8 }} animate={on ? { scale: [1, 1.35, 1] } : { scale: 1 }} transition={{ duration: .35 }}>♥</motion.button>;
+  return <m.button className={"heart" + (on ? " on" : "")} data-wish={p.id} aria-label="Save to wishlist" aria-pressed={on} initial={false} whileTap={{ scale: .8 }} animate={on ? { scale: [1, 1.35, 1] } : { scale: 1 }} transition={{ duration: .35 }}>♥</m.button>;
 }
 // product card: rises in when it scrolls into view (staggered by its place in the row through i), tilts toward the pointer on
 // springs and carries a soft light that follows it (hover devices only, never under reduced motion)
@@ -47,10 +47,10 @@ export function Card({ p, i = 0 }) {
     rx.set(((e.clientY - r.top) / r.height - .5) * -5); ry.set(((e.clientX - r.left) / r.width - .5) * 7);
   };
   const onLeave = () => { rx.set(0); ry.set(0); };
-  return <motion.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
-    initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
+  return <m.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
+    initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
     <a href={"product.html?id=" + p.id}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}</small><h3>{p.name}</h3><Stars p={p} /></a>
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></motion.div>;
+    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></m.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
@@ -278,12 +278,12 @@ export function Chrome() {
   const n = cartCount();
   return <>
     <div className="navshade"></div><div className="overlay" data-close></div>
-    <motion.aside className="drawer" aria-label="Cart" initial={false} animate={cartOpen ? "open" : "closed"} variants={DRAWER} transition={SPRING}><h2>Your cart (<span>{n}</span>) <button className="x" data-close aria-label="Close cart">×</button></h2><div className="dbody">{n ? <>
+    <m.aside className="drawer" aria-label="Cart" initial={false} animate={cartOpen ? "open" : "closed"} variants={DRAWER} transition={SPRING}><h2>Your cart (<span>{n}</span>) <button className="x" data-close aria-label="Close cart">×</button></h2><div className="dbody">{n ? <>
       <div className="lines">{Object.keys(cart).map(id => <Line p={byId(id)} key={id} />)}</div>
       <div className="dfoot"><div className="tot"><span>Subtotal</span><b>{money(cartTotal())}</b></div><a className="btn" href="checkout.html">Checkout</a><a className="btn ghost" href="cart.html">View cart</a></div></>
-      : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></motion.aside>
-    <AnimatePresence>{toastState.msg && <motion.div className="toast on" role="status" key="toast" style={{ x: "-50%" }} initial={{ y: 90, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 90, opacity: 0 }} transition={SPRING}><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</motion.div>}</AnimatePresence>
+      : <div className="empty"><div className="big"><Icon k="cart" /></div><p>Your cart is empty.</p><button className="btn" data-close>Continue shopping</button></div>}</div></m.aside>
+    <AnimatePresence>{toastState.msg && <m.div className="toast on" role="status" key="toast" style={{ x: "-50%" }} initial={{ y: 90, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 90, opacity: 0 }} transition={SPRING}><span>{toastState.msg}</span>{toastState.withCart && <button data-drawer>View cart</button>}</m.div>}</AnimatePresence>
     <MobileNav />
-    <motion.div className="progress" style={{ scaleX: progress }}></motion.div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
+    <m.div className="progress" style={{ scaleX: progress }}></m.div><button className="totop" aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
   </>;
 }
