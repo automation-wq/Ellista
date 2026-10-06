@@ -43,26 +43,12 @@ export function lazyClips() {
 // rows that fit on the screen need no scroll arrows
 export const fitStrips = () => $$(".strip").forEach(x => { const r = $(".row", x); if (r) x.classList.toggle("nos", r.scrollWidth <= r.clientWidth + 2); });
 
-// window-level listeners, attached once: back-to-top, card tilt and light (the scroll progress line is a Motion value in Chrome)
+// window-level listeners, attached once: back-to-top and strip arrows (the card tilt lives in Card, the progress line in Chrome)
 let chromeDone = false;
 export function chrome() {
   if (chromeDone) return;
   chromeDone = true;
   addEventListener("scroll", () => document.body.classList.toggle("scrolled", document.documentElement.scrollTop > 300), { passive: true });
-  // soft light follows the pointer across a product card, and the card tilts a little toward it (hover devices only, see CSS)
-  document.addEventListener("pointermove", e => {
-    const c = e.target.closest && e.target.closest(".card");
-    if (!c) return;
-    const r = c.getBoundingClientRect();
-    c.style.setProperty("--mx", e.clientX - r.left + "px");
-    c.style.setProperty("--my", e.clientY - r.top + "px");
-    c.style.setProperty("--rx", ((e.clientY - r.top) / r.height - .5) * -5 + "deg");
-    c.style.setProperty("--ry", ((e.clientX - r.left) / r.width - .5) * 7 + "deg");
-  }, { passive: true });
-  document.addEventListener("pointerout", e => {
-    const c = e.target.closest && e.target.closest(".card");
-    if (c && !c.contains(e.relatedTarget)) { c.style.removeProperty("--rx"); c.style.removeProperty("--ry"); }
-  }, { passive: true });
   addEventListener("resize", fitStrips);
 }
 

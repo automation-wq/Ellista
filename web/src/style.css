@@ -242,7 +242,7 @@ header { background:rgba(255,255,255,.9); backdrop-filter:blur(14px) saturate(1.
 .card:hover { outline:0; border-color:#08805f55; box-shadow:0 14px 32px -14px #08805f55; translate:0 -4px }
 .heart { position:absolute; top:20px; right:20px; z-index:2; width:34px; height:34px; border-radius:50%; border:0; background:#ffffffe6; color:#b9b9b9; font-size:17px; line-height:1; cursor:pointer; display:grid; place-items:center; transition:scale .15s, color .15s; box-shadow:0 2px 8px #0003 }
 .heart:hover { scale:1.12 }
-.heart.on { color:#ff4d6d; animation:pop .35s cubic-bezier(.2,1.6,.4,1) }
+.heart.on { color:#ff4d6d } /* pops through Motion */
 .actions .heart { position:static; width:48px; height:auto; border-radius:6px; background:none; border:1px solid var(--line); box-shadow:none; font-size:20px; color:var(--muted) }
 .actions .heart.on { color:#ff4d6d; border-color:#ff4d6d }
 
@@ -257,12 +257,7 @@ header { background:rgba(255,255,255,.9); backdrop-filter:blur(14px) saturate(1.
 .sarrow:hover { background:var(--accent); color:var(--on) }
 @media (hover:none) { .sarrow { display:none } }
 
-.reveal.in .card { animation:up .5s backwards }
-.reveal.in .card:nth-child(2) { animation-delay:.05s }
-.reveal.in .card:nth-child(3) { animation-delay:.1s }
-.reveal.in .card:nth-child(4) { animation-delay:.15s }
-.reveal.in .card:nth-child(5) { animation-delay:.2s }
-.reveal.in .card:nth-child(n+6) { animation-delay:.25s }
+/* cards rise in one after another through Motion (Card in components.jsx) */
 
 .btn { position:relative; overflow:hidden }
 .btn:not(.ghost):not([disabled])::after { content:""; position:absolute; inset:0; background:linear-gradient(110deg,transparent 30%,#ffffff70 50%,transparent 70%); translate:-110% 0 }
@@ -286,7 +281,10 @@ header { background:rgba(255,255,255,.9); backdrop-filter:blur(14px) saturate(1.
 .hl span { display:block; font-size:12px; color:var(--muted) }
 .hl b { font-weight:500; font-size:14px }
 .tabbar { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto; scrollbar-width:none }
-.tabbar button { background:none; border:0; color:var(--muted); font:inherit; font-weight:600; padding:12px 18px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:color .2s, border-color .2s }
+.tabbar button { position:relative; background:none; border:0; color:var(--muted); font:inherit; font-weight:600; padding:12px 18px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:color .2s, border-color .2s }
+.tabbar .ink { position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--accent) } /* slides between the tabs (Motion layoutId) */
+#tabs .tabbar button.on { border-color:transparent }
+.tabpane:not([hidden]) { animation:up .35s }
 .tabbar button:hover { color:var(--text) }
 .tabbar button.on { color:var(--text); border-color:var(--accent) }
 .tabpane { animation:up .35s backwards; max-width:820px; color:var(--soft) }
@@ -510,8 +508,8 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
 /* The panel is positioned against the header (the list items stay unpositioned), so it spans the full width and is not clipped by the scrolling bar on phones. */
 .npanel { position:absolute; left:0; right:0; top:100%; background:var(--head); border-top:1px solid var(--line); box-shadow:0 30px 50px -22px #00000047; white-space:normal;
   max-height:calc(100vh - var(--hh,150px)); max-height:calc(100dvh - var(--hh,150px)); overflow-y:auto; overscroll-behavior:contain;
-  visibility:hidden; opacity:0; translate:0 -8px; transition:opacity .2s, translate .2s cubic-bezier(.2,.8,.2,1), visibility 0s .2s }
-.l0.open .npanel { visibility:visible; opacity:1; translate:0 0; transition:opacity .2s, translate .2s cubic-bezier(.2,.8,.2,1) }
+  visibility:hidden; transition:visibility 0s .2s } /* fades down and staggers its tiles through Motion (flyIn in components.jsx) */
+.l0.open .npanel { visibility:visible; transition:none }
 .ngrid { max-width:1200px; margin:auto; padding:28px 16px 34px; display:grid; grid-template-columns:1.5fr 1.15fr .85fr; gap:44px; align-items:start }
 .l0.open .ngrid > * { animation:up .35s backwards }
 .l0.open .ngrid > :nth-child(2) { animation-delay:.05s }
@@ -570,10 +568,7 @@ h2 a { transition:letter-spacing .2s } h2 a:hover { letter-spacing:.5px }
 .slide.on .w { animation:shine 7s .8s ease-in-out infinite alternate } /* the words rise through Motion (home.jsx) */
 @keyframes shine { to { background-position:100% 0 } }
 
-/* product cards tilt toward the pointer; the discount badge pulses */
-@media (hover:hover) {
-  .card { transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:translate .2s, border-color .2s, box-shadow .2s, transform .18s ease-out }
-}
+/* product cards tilt toward the pointer on Motion springs (Card in components.jsx); the discount badge pulses */
 .img .badge { animation:ring 2.6s ease-out infinite }
 @keyframes ring { from { box-shadow:0 0 0 0 #e11d4880 } 60%, to { box-shadow:0 0 0 9px #e11d4800 } }
 
@@ -786,7 +781,8 @@ input[type=search] { border-radius:999px; padding-left:18px }
 .subnav.on > div { opacity:1; visibility:visible; translate:0 0; transition:opacity .3s, translate .3s cubic-bezier(.2,.8,.2,1) }
 .subnav b { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:300px }
 .stabs { display:flex; gap:4px; margin-left:auto }
-.stabs a { position:relative; padding:8px 12px; font-size:13.5px; font-weight:600; color:var(--muted); border-radius:999px; transition:color .2s, background .2s }
+.stabs a { position:relative; isolation:isolate; padding:8px 12px; font-size:13.5px; font-weight:600; color:var(--muted); border-radius:999px; transition:color .2s, background .2s }
+.stabs .ink { position:absolute; inset:0; border-radius:999px; background:#08805f14; z-index:-1 } /* slides between the pills (Motion layoutId) */
 .stabs a:hover { color:var(--text); background:#f1f3f5 }
 .stabs a.on { color:var(--text) }
 .stabs a.on::after { content:""; position:absolute; left:12px; right:12px; bottom:2px; height:2px; border-radius:2px; background:var(--accent) }

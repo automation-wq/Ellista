@@ -84,12 +84,12 @@ export function Home() {
       {emiFrom > 0 && <a className="bt glass" href="offers.html" style={{ gridColumn: "span 2" }}><span className="kicker">No Cost EMI</span><h3>From {money(emiFrom)}/month</h3><p>3, 6 or 9 instalments on participating bank credit cards, no extra interest.</p><u>See bank offers →</u></a>}
     </div></section>
 
-    <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><div className="grid">{deals.map(p => <Card p={p} key={p.id} />)}</div></section>
+    <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
     {CATS.map(c => { const S = sizeOf(c), list = inCat(c); return list.length ? <section className="cblock" key={c}>
       <a className="cban" href={catUrl(c)}><img className="cph" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><div><span className="kicker">{c}</span><h2>{S ? S.note : c}</h2>
         <p>From {money(lowest(c))} · up to {maxOff(c)}% off · {list.length} model{list.length === 1 ? "" : "s"}</p><u>Explore {S ? S.short : c} →</u></div></a>
-      <div className="grid cgrid">{list.slice(0, 4).map(p => <Card p={p} key={p.id} />)}{list.length < 4 && <a className="morecard" href={catUrl(c)} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><span className="kicker">{c}</span><b>See all {S ? S.short : c}</b><small>All {list.length} models with filters and size tabs</small><u>View all →</u></a>}</div>
+      <div className="grid cgrid">{list.slice(0, 4).map((p, i) => <Card p={p} i={i} key={p.id} />)}{list.length < 4 && <a className="morecard" href={catUrl(c)} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><span className="kicker">{c}</span><b>See all {S ? S.short : c}</b><small>All {list.length} models with filters and size tabs</small><u>View all →</u></a>}</div>
     </section> : null; })}
 
     <section><h2>Shop by Brand</h2><div className="brands">{BRANDS.map(b => { const ps = P.filter(p => p.brand === b); return <a className="brand" href={brandUrl(b)} key={b}><b>{b}</b><span>{ps.length} products</span><u>Explore →</u><span className="pstack">{ps.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a>; })}</div></section>

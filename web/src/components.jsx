@@ -1,6 +1,8 @@
 // Shared pieces: icons, product card, rows, forms, header with the category menus, footer, cart drawer, toast.
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useSpring } from "motion/react";
+import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from "motion/react";
+import { animate, stagger } from "motion";
+import { reduced } from "./motion.js";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save } from "./api.js";
 import { ICONS, DRAW_ICONS, COUNTRIES, BANK_OFFERS, TOP_FEATURES, GUIDES, CAT_SIZE, catSizes, catUrl, brandUrl, listUrl, off, avg, starRow, eta } from "./data.js";
@@ -29,13 +31,26 @@ export function Buy({ p }) {
 export function Heart({ p }) {
   const { wish } = useStore();
   const on = wish.includes(p.id);
-  return <button className={"heart" + (on ? " on" : "")} data-wish={p.id} aria-label="Save to wishlist" aria-pressed={on}>♥</button>;
+  return <motion.button className={"heart" + (on ? " on" : "")} data-wish={p.id} aria-label="Save to wishlist" aria-pressed={on} initial={false} whileTap={{ scale: .8 }} animate={on ? { scale: [1, 1.35, 1] } : { scale: 1 }} transition={{ duration: .35 }}>♥</motion.button>;
 }
-export function Card({ p }) {
+// product card: rises in when it scrolls into view (staggered by its place in the row through i), tilts toward the pointer on
+// springs and carries a soft light that follows it (hover devices only, never under reduced motion)
+const HOVER = matchMedia("(hover: hover)").matches, TILT = { stiffness: 260, damping: 22 };
+export function Card({ p, i = 0 }) {
   const { money } = useStore();
-  return <div className="card"><Heart p={p} />
+  const still = useReducedMotion();
+  const rx = useSpring(0, TILT), ry = useSpring(0, TILT);
+  const onMove = e => {
+    if (!HOVER || still || e.pointerType !== "mouse") return;
+    const c = e.currentTarget, r = c.getBoundingClientRect();
+    c.style.setProperty("--mx", e.clientX - r.left + "px"); c.style.setProperty("--my", e.clientY - r.top + "px");
+    rx.set(((e.clientY - r.top) / r.height - .5) * -5); ry.set(((e.clientX - r.left) / r.width - .5) * 7);
+  };
+  const onLeave = () => { rx.set(0); ry.set(0); };
+  return <motion.div className="card" style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} onPointerMove={onMove} onPointerLeave={onLeave}
+    initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -40px" }} transition={{ type: "spring", stiffness: 220, damping: 26, delay: (i % 6) * .06 }}><Heart p={p} />
     <a href={"product.html?id=" + p.id}><div className="img"><Photo p={p} />{off(p) > 0 && <span className="badge">{off(p)}% off</span>}</div><small>{p.brand}</small><h3>{p.name}</h3><Stars p={p} /></a>
-    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></div>;
+    <div className="price"><b>{money(p.price)}</b>{p.mrp > p.price && <><s>{money(p.mrp)}</s><em className="save">Save {money(p.mrp - p.price)}</em></>}</div>{p.emi && <span className="emi">No Cost EMI</span>}<span className="geta"><Icon k="truck" /> Free delivery · get it by {eta()[1]}</span><Buy p={p} /></motion.div>;
 }
 export function Line({ p }) {
   const { money, qtyOf } = useStore();
@@ -46,7 +61,7 @@ export function Line({ p }) {
 }
 // a sideways-scrolling strip with arrow buttons (hidden when the row fits on the screen)
 export const Strip = ({ children }) => <div className="strip"><button className="sarrow" data-scroll="-1" aria-label="Scroll left">‹</button><div className="row">{children}</div><button className="sarrow" data-scroll="1" aria-label="Scroll right">›</button></div>;
-export const Row = ({ title, href, list }) => list.length ? <section><h2>{title} {href ? <a href={href}>View all</a> : null}</h2><Strip>{list.map(p => <Card key={p.id} p={p} />)}</Strip></section> : null;
+export const Row = ({ title, href, list }) => list.length ? <section><h2>{title} {href ? <a href={href}>View all</a> : null}</h2><Strip>{list.map((p, i) => <Card key={p.id} p={p} i={i} />)}</Strip></section> : null;
 export const Box = ({ title, text, href, cta }) => <div className="box"><h1>{title}</h1><p>{text}</p><a className="btn" href={href}>{cta}</a></div>;
 export function OrderItems({ o }) {
   const { money } = useStore();
@@ -149,6 +164,15 @@ function Deliver() {
       <p className="muted small" role="status">{msg || "Free delivery, usually in 3 to 5 days. Cash on delivery available."}</p></form></details>;
 }
 
+// a category panel fades down and its tiles, products and links arrive one after another (Motion; nothing moves under reduced motion)
+function flyIn(panel) {
+  if (!panel || reduced()) return;
+  panel.style.opacity = 0; // never a full-opacity frame before the fade starts
+  animate(panel, { opacity: [0, 1], y: [-8, 0] }, { duration: .25, ease: [.2, .8, .2, 1] });
+  animate($$(".ntile, .nprod, .ndisc a, .npromo", panel), { opacity: [0, 1], y: [10, 0] }, { delay: stagger(.025), duration: .35, ease: [.2, .8, .2, 1] });
+}
+function flyOut(panel) { if (panel && !reduced()) animate(panel, { opacity: 0, y: -6 }, { duration: .15 }); }
+
 export function Header() {
   const { P, CATS, BRANDS, catImg, me, money, country, wish, cartCount, bump, closeCart } = useStore();
   const items = navItems(P, CATS, BRANDS, catImg);
@@ -163,9 +187,9 @@ export function Header() {
       clearTimeout(navTimer);
       pinned = !!li && pin;
       if (li === openLi) return;
-      if (openLi) { openLi.classList.remove("open"); $(".l0link", openLi).setAttribute("aria-expanded", "false"); }
+      if (openLi) { openLi.classList.remove("open"); $(".l0link", openLi).setAttribute("aria-expanded", "false"); flyOut($(".npanel", openLi)); }
       openLi = li;
-      if (li) { li.classList.add("open"); $(".l0link", li).setAttribute("aria-expanded", "true"); }
+      if (li) { li.classList.add("open"); $(".l0link", li).setAttribute("aria-expanded", "true"); flyIn($(".npanel", li)); }
       document.body.classList.toggle("nav-open", !!li);
       document.body.classList.toggle("nav-pinned", pinned);
     };

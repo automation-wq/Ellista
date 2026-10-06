@@ -1,6 +1,7 @@
 // Product page: gallery, feature strip, price with EMI, swatches, stock bar, delivery pill, offers, add-on box, actions,
 // pincode check, share, tabs with reviews, compare table, related rows, sticky sub-nav.
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { api, qs, load, save, track } from "./api.js";
 import { Photo, Stars, Buy, Heart, Row, Box, Form, Ico, Icon } from "./components.jsx";
@@ -8,6 +9,7 @@ import { DEFAULT_FEATURES, BANK_OFFERS, GUIDES, SPEC_GROUPS, specIcon, catSizes,
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const INK = { type: "spring", stiffness: 420, damping: 34 }; // the marker that slides between tabs (Motion layoutId)
 
 export function Product() {
   const { P, byId, money, qtyOf, setQty, recent, addRecent, updateProduct, toast, openCart, me } = useStore();
@@ -75,10 +77,10 @@ export function Product() {
     <div className="crumbs"><a href="index.html">Home</a> › <a href={catUrl(p.cat)}>{p.cat}</a> › {p.name}</div>
     <nav className={"subnav" + (subOn ? " on" : "")} aria-label="Product sections"><div><b>{p.brand} {p.name}</b>
       <div className="stabs">{[["#overview", "Overview", "overview", "t-specs0"], ["#tabs", "Specs", "tabs", "t-specs"], ["#compare", "Compare", "compare"], ["#tabs", "Reviews", "tabs2", "t-rev"]].map(([h, t, key, dt], i) =>
-        <a href={h} className={(key === spySec || (key === "tabs2" && false)) ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}</a>)}</div>
+        <a href={h} className={key === spySec ? "on" : undefined} data-tab={dt && dt !== "t-specs0" ? dt : undefined} key={i}>{t}{key === spySec && <motion.i className="ink" layoutId="stab-ink" transition={INK} />}</a>)}</div>
       <span className="sprice">{money(p.price)}</span><Buy p={p} /></div></nav>
     <div className="pdp" id="overview">
-      <div className="gallery"><div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><img src={img} alt={p.brand + " " + p.name} fetchPriority="high" />{save$ && <span className="badge">{off(p)}% off</span>}</div>
+      <div className="gallery"><div className="img zoom" ref={zoomRef} onMouseMove={zoomMove}><AnimatePresence initial={false} mode="popLayout"><motion.img key={img} src={img} alt={p.brand + " " + p.name} fetchPriority="high" initial={{ opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: .3 }} /></AnimatePresence>{save$ && <span className="badge">{off(p)}% off</span>}</div>
         {images.length > 1 && <div className="thumbs">{images.map((src, i) => <button className={"thumb" + (src === img ? " on" : "")} data-img={src} aria-label={"Photo " + (i + 1)} onClick={() => setImg(src)} key={src}><img src={src} alt="" loading="lazy" /></button>)}</div>}
         <p className="muted hint">Move the pointer over the photo to zoom in</p>
         {feats.length > 0 && <div className="fstrip">{feats.map(([k, v]) => <div className="ft" key={k}><Ico shapes={specIcon(k)} /><span><small>{k}</small><b>{v}</b></span></div>)}</div>}</div>
@@ -108,7 +110,7 @@ export function Product() {
       </div>
     </div>
     <section id="tabs">
-      <div className="tabbar"><button className={tab === "t-desc" ? "on" : undefined} data-tab="t-desc">Description</button><button className={tab === "t-specs" ? "on" : undefined} data-tab="t-specs">Specifications</button><button className={tab === "t-del" ? "on" : undefined} data-tab="t-del">Delivery and returns</button><button className={tab === "t-rev" ? "on" : undefined} data-tab="t-rev">Reviews ({(p.reviews || []).length})</button></div>
+      <div className="tabbar">{[["t-desc", "Description"], ["t-specs", "Specifications"], ["t-del", "Delivery and returns"], ["t-rev", "Reviews (" + (p.reviews || []).length + ")"]].map(([id, label]) => <button className={tab === id ? "on" : undefined} data-tab={id} key={id}>{label}{tab === id && <motion.i className="ink" layoutId="tab-ink" transition={INK} />}</button>)}</div>
       <div className="tabpane" id="t-desc" hidden={tab !== "t-desc"}><p>{p.desc || p.brand + " " + p.name}</p><ul>{DEFAULT_FEATURES.map(f => <li key={f}>{f}</li>)}</ul></div>
       <div className="tabpane" id="t-specs" hidden={tab !== "t-specs"}><table className="specs">{groups.filter(([, rows]) => rows.length).map(([g, rows]) => <tbody key={g}><tr className="grp"><th colSpan="2">{g}</th></tr>{rows.map(([k, v], i) => <tr key={i}><th>{k}</th><td>{v}</td></tr>)}</tbody>)}</table></div>
       <div className="tabpane" id="t-rev" hidden={tab !== "t-rev"}>
