@@ -1,0 +1,164 @@
+// Static content and lookups. Sample text where marked: replace with the client's own before launch.
+
+// ponytail: hardcoded exchange rates, swap for real per-country prices from the backend
+export const COUNTRIES = { India: ["₹", "en-IN", 1], UAE: ["AED ", "en-AE", 0.044], USA: ["$", "en-US", 0.012] };
+// bullets under the description on every product page; the real details come from each product's own specifications
+export const DEFAULT_FEATURES = ["Genuine product with brand warranty", "Quality checked before dispatch", "Cash on delivery available"];
+export const INFO = {
+  about: ["About Mytekkstore", "<p>Mytekkstore is a multi-category, multi-brand electronics store.</p><p class='muted'>[Sample text — client to provide the company story.]</p>"],
+  contact: ["Contact Us", "<p>We are happy to help with orders, delivery and service.</p><ul><li>Phone: [client to provide]</li><li>Email: [client to provide]</li><li>Hours: [client to provide]</li></ul>"],
+  stores: ["Store Locator", "<p class='muted'>[Sample text — client to provide the list of store addresses.]</p>"],
+  shipping: ["Shipping and Delivery", "<p class='muted'>[Sample text — client to provide delivery areas, charges and timelines.]</p>"],
+  returns: ["Returns and Refunds", "<p class='muted'>[Sample text — client to provide the returns policy.]</p>"],
+  terms: ["Terms of Use", "<p class='muted'>[Sample text — client to provide terms of use.]</p>"],
+  privacy: ["Privacy Policy", "<p class='muted'>[Sample text — client to provide privacy policy.]</p>"],
+};
+// "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
+export const FAQ = [
+  ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],
+  ["Can I pay when the order arrives?", "Yes. Cash on delivery is available on every order.", null],
+  ["How does No Cost EMI work?", "On products marked No Cost EMI, the price is split over 3, 6 or 9 months on participating bank credit cards with no extra interest. The plans are listed on each product page.", ["offers.html", "See the offers"]],
+  ["Are the products genuine?", "Yes. Mytekkstore sells genuine Elista and Telefunken products, each with the brand's warranty.", null],
+  ["Which TV size is right for my room?", "Measure how far you sit from the screen. The TV size guide turns that distance into a recommended size.", ["category.html?cat=Televisions#guide", "Open the TV size guide"]],
+  ["How do I track my order?", "Sign in and open your account: every order shows its status from Placed to Delivered.", ["account.html", "Go to my account"]],
+  ["Can I return a product?", "Yes, returns are easy. The full policy is on the Returns and Refunds page.", ["page.html?p=returns", "Read the returns policy"]],
+];
+export const STEPS = ["Placed", "Confirmed", "Shipped", "Delivered"];
+
+// ===== icons: one line-icon set for the whole site (24 px grid, 1.8 px rounded stroke) =====
+export const ICONS = {
+  truck: '<path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/>',
+  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
+  box: '<path d="M12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+  cart: '<path d="M3 4h2l2.4 11h11l2-7H7"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  tv: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  apps: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M9 21h6"/>',
+  sound: '<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>',
+  ruler: '<path d="M3 17L17 3l4 4L7 21z"/><path d="M8 16l2 2M11 13l2 2M14 10l2 2"/>',
+  plug: '<path d="M9 7V3M15 7V3M7 7h10v5a5 5 0 01-10 0zM12 17v4"/>',
+  bolt: '<path d="M13 2L4 14h6l-1 8 9-12h-6z"/>',
+  spin: '<path d="M20 12a8 8 0 11-2.3-5.7M20 4v5h-5"/>',
+  wind: '<path d="M3 8h11a3 3 0 10-3-3M3 12h15a3 3 0 110 6M3 16h8a2 2 0 11-2 2"/>',
+  quiet: '<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M17 9l4 6M21 9l-4 6"/>',
+  basket: '<path d="M3 10h18l-2 10H5z"/><path d="M8 10l3-6M16 10l-3-6"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  medal: '<circle cx="12" cy="14" r="5"/><path d="M9 3l3 6 3-6M8 3h8"/>',
+  star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  room: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/>',
+  snow: '<path d="M12 2v20M4 7l16 10M4 17L20 7M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3"/>',
+  pin: '<path d="M12 21s-6-5.3-6-11a6 6 0 0112 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  home: '<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>',
+  tag: '<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+  sliders: '<path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/>',
+};
+// self-drawing icons (pathLength lets the stroke draw in with CSS)
+export const DRAW_ICONS = {
+  truck: '<path pathLength="1" d="M3 7h11v8H3z"/><path pathLength="1" d="M14 10h4l3 3v2h-7z"/><circle pathLength="1" cx="7" cy="17" r="2"/><circle pathLength="1" cx="17" cy="17" r="2"/>',
+  shield: '<path pathLength="1" d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path pathLength="1" d="M9 12l2 2 4-4"/>',
+  cash: '<rect pathLength="1" x="2" y="6" width="20" height="12" rx="2"/><circle pathLength="1" cx="12" cy="12" r="3"/><path pathLength="1" d="M6 12h.01M18 12h.01"/>',
+  box: '<path pathLength="1" d="M12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path pathLength="1" d="M3 7.5l9 4.5 9-4.5M12 12v9"/>',
+};
+// line icons for the feature strip under the product photo, picked by the specification's name
+export const SPEC_ICONS = [
+  [/screen|size|inch|\bcm\b/i, '<rect pathLength="1" x="2" y="4" width="20" height="13" rx="2"/><path pathLength="1" d="M8 21h8M12 17v4"/>'],
+  [/resolution|4k|hd|pixel/i, '<rect pathLength="1" x="3" y="5" width="18" height="14" rx="2"/><path pathLength="1" d="M8 9v6M8 12l4-3M8 12l4 3M14 9h2a2 2 0 010 4h-2zM14 13l3 2"/>'],
+  [/sound|audio|speaker|dolby/i, '<path pathLength="1" d="M4 10v4h4l5 4V6L8 10z"/><path pathLength="1" d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>'],
+  [/port|hdmi|usb|connect/i, '<path pathLength="1" d="M9 7V3M15 7V3M7 7h10v5a5 5 0 01-10 0zM12 17v4"/>'],
+  [/smart|google|android|app|os\b/i, '<rect pathLength="1" x="3" y="3" width="7" height="7" rx="1.5"/><rect pathLength="1" x="14" y="3" width="7" height="7" rx="1.5"/><rect pathLength="1" x="3" y="14" width="7" height="7" rx="1.5"/><rect pathLength="1" x="14" y="14" width="7" height="7" rx="1.5"/>'],
+  [/refresh|hz|rate/i, '<path pathLength="1" d="M3 12h3l3-7 4 14 3-7h5"/>'],
+  [/capacity|kg|load|drum/i, '<circle pathLength="1" cx="12" cy="12" r="9"/><circle pathLength="1" cx="12" cy="12" r="4"/><path pathLength="1" d="M12 8a4 4 0 014 4"/>'],
+  [/spin|rpm/i, '<path pathLength="1" d="M20 12a8 8 0 11-2.3-5.7M20 4v5h-5"/>'],
+  [/energy|star|power|watt/i, '<path pathLength="1" d="M13 2L4 14h6l-1 8 9-12h-6z"/>'],
+  [/cool|ton|room|air/i, '<path pathLength="1" d="M12 2v20M4 7l16 10M4 17L20 7M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3"/>'],
+  [/compressor|inverter|motor|program/i, '<circle pathLength="1" cx="12" cy="12" r="3"/><path pathLength="1" d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'],
+  [/warranty|guarantee/i, '<path pathLength="1" d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path pathLength="1" d="M9 12l2 2 4-4"/>'],
+];
+// the Specifications tab groups rows the way the big stores do; a row that matches none of these goes under General
+export const SPEC_GROUPS = [["Display", /screen|size|inch|\bcm\b|resolution|4k|hd|pixel|refresh|hz|panel/i], ["Sound", /sound|audio|speaker|dolby/i], ["Smart features", /smart|google|android|app|os\b|voice|remote/i],
+  ["Connectivity", /port|hdmi|usb|connect|wi-?fi|bluetooth/i], ["Performance", /capacity|kg|load|drum|spin|rpm|energy|star|power|watt|cool|ton|compressor|inverter|motor|program|wash/i], ["Warranty", /warranty|guarantee/i]];
+export const specIcon = k => (SPEC_ICONS.find(([re]) => re.test(k)) || [0, '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M8 12l3 3 5-6"/>'])[1];
+
+// looping room clips (free Pexels videos in public/img) behind the Top features bands; lifestyle photos behind headlines and tiles
+export const CAT_CLIPS = { "Televisions": "v-tv", "Washing Machines": "v-wash", "Air Conditioners": "v-ac" };
+export const KV_IMG = { "Televisions": "kv-tv", "Washing Machines": "kv-wash", "Air Conditioners": "kv-ac" };
+
+// Bank offers shown on the home page, the offers page and every product page. SAMPLE offers: replace with the real bank terms before launch.
+// [bank, headline, terms, bank colour for the wordmark (real logos to come from the client)]
+export const BANK_OFFERS = [
+  ["HDFC Bank", "10% instant discount", "On HDFC Bank credit cards for orders above ₹10,000. Up to ₹2,000.", "#004c8f"],
+  ["ICICI Bank", "5% cashback", "On ICICI Bank credit and debit cards. Up to ₹1,500.", "#b02a30"],
+  ["SBI Card", "No Cost EMI", "3, 6 and 9 month EMI with no extra interest on SBI credit cards.", "#22409a"],
+  ["Axis Bank", "₹1,000 off", "On Axis Bank cards for orders above ₹25,000.", "#97144d"],
+];
+// The festive offers page. Set ends to a date such as "2026-11-15T23:59:59+05:30" to show a live countdown; empty hides it.
+export const FESTIVE = { title: "Festive Offers", sub: "Big savings on TVs, washing machines and ACs", ends: "" };
+
+// ===== category extras: "Top features" at the end of every category page, plus an interactive size guide on the TV page =====
+// (the client wants the guide for televisions only). Sample marketing text: only claims the catalogue's specifications support.
+export const TOP_FEATURES = {
+  "Televisions": [["tv", "4K Ultra HD", "Four times the detail of Full HD on the 43 and 55 inch models"], ["apps", "Smart TV apps", "Streaming apps built in on every model, no extra box needed"], ["mic", "Google TV with voice remote", "On the Telefunken 55 inch models"],
+    ["sound", "Dolby Audio", "Clearer dialogue and fuller sound on the Telefunken models"], ["ruler", "Three sizes", "32, 43 and 55 inch, for every room"], ["plug", "HDMI and USB ports", "Connect a set-top box, console or pen drive"]],
+  "Washing Machines": [["bolt", "5 Star energy rating", "Every model uses less electricity on each wash"], ["spin", "Up to 10 wash programs", "From delicates to heavy bedding"], ["wind", "Up to 1400 RPM spin", "Clothes come out closer to dry"],
+    ["quiet", "Inverter direct drive", "Quieter, with less vibration, on the 8 kg front load"], ["shield", "Built to last", "Rust-proof body or stainless steel drum"], ["basket", "Three types", "Semi automatic, top load and front load"]],
+  "Air Conditioners": [["gear", "Inverter compressor", "Adjusts its power to save electricity, on both models"], ["medal", "Copper condenser", "Better cooling and a longer life"], ["star", "Up to 5 Star rating", "The 1.5 Ton model carries the top rating"],
+    ["room", "Sized for your room", "1 Ton up to 120 sq ft, 1.5 Ton up to 180 sq ft"], ["snow", "Split AC", "Quiet indoor unit, compressor outside"], ["quiet", "Smooth running", "Inverter compressors avoid the on-off cycling of older ACs"]],
+};
+export const GUIDES = {
+  "Televisions": {
+    nav: "TV size guide", featTitle: "What makes these TVs stand out", title: "How do you find the right TV size?",
+    intro: "Start with how far you sit from the screen. For a cinema-like view the screen should fill about 40° of your vision. That works out to your viewing distance in inches, divided by 1.2.",
+    ask: "How far do you sit from the TV?", min: 1, max: 3, step: 0.1, value: 1.7, show: v => v.toFixed(1) + " m",
+    rec: v => v * 39.37 / 1.2, fmt: n => "about " + Math.round(n) + " inch",
+    thead: ["Screen size", "Cinema-style viewing distance"], row: n => "about " + (n * 1.2 * 0.0254).toFixed(1) + " m",
+    foot: "A guide based on the 40° viewing angle recommended for cinemas. Sit a little further back if you prefer a more relaxed picture.",
+    art(v, n) {
+      const tx = 150 + (v - 1) / 3 * 330, h = 20 + 0.27 * (tx - 82);
+      return `<svg viewBox="0 0 520 260" role="img"><line x1="0" y1="222" x2="520" y2="222" stroke="#cfd4dc" stroke-width="2"/>
+        <polygon points="84,128 ${tx},${128 - h / 2} ${tx},${128 + h / 2}" fill="#08805f" opacity=".16"/>
+        <rect x="14" y="132" width="22" height="88" rx="9" fill="#9aa3b2"/><rect x="20" y="168" width="78" height="52" rx="12" fill="#b6bdc9"/>
+        <circle cx="70" cy="128" r="13" fill="#15181e"/><rect x="56" y="143" width="28" height="34" rx="10" fill="#15181e"/>
+        <rect x="${tx}" y="${128 - h / 2}" width="9" height="${h}" rx="3" fill="#15181e"/><rect x="${tx - 6}" y="${128 + h / 2}" width="21" height="${222 - 128 - h / 2}" fill="#9aa3b2" opacity=".5"/>
+        <text x="${tx + 4}" y="${118 - h / 2}" text-anchor="middle" font-size="15" font-weight="700" fill="#15181e">${Math.round(n)}"</text>
+        <line x1="84" y1="244" x2="${tx}" y2="244" stroke="#08805f" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="${(84 + tx) / 2}" y="238" text-anchor="middle" font-size="14" font-weight="600" fill="#08805f">${v.toFixed(1)} m</text>
+        <text x="${Math.min(140, tx - 20)}" y="110" font-size="12" fill="#08805f">40°</text></svg>`;
+    },
+  },
+};
+
+// Each category has one "size" that shoppers pick by: screen size for TVs, capacity for the others. It is read from the product name.
+export const CAT_SIZE = {
+  "Televisions": { short: "TVs", by: "Size", note: "Find the perfect size for every space", re: /(\d+ cm) \((\d+) inch\)/, label: m => m[2] + " inch TVs", n: m => +m[2] },
+  "Washing Machines": { short: "Washing Machines", by: "Capacity", note: "Pick the right capacity for your family", re: /([\d.]+) kg/, label: m => m[1] + " kg", n: m => +m[1] },
+  "Air Conditioners": { short: "Air Conditioners", by: "Capacity", note: "Match the cooling to your room", re: /([\d.]+) Ton/, label: m => m[1] + " Ton", n: m => +m[1] },
+};
+// The sizes on sale in one category. sizeOf(product) gives { label, n }; all lists every size, biggest first.
+export function catSizes(P, cat) {
+  const S = Object.hasOwn(CAT_SIZE, cat) ? CAT_SIZE[cat] : null;
+  const raw = p => { const m = S && S.re.exec(p.name); return m ? { label: S.label(m), n: S.n(m) } : null; };
+  const canon = new Map(); // products of the same size share one label (a 139 cm and a 140 cm TV are both 55 inch)
+  P.filter(p => p.cat === cat).forEach(p => { const s = raw(p); if (s && !canon.has(s.n)) canon.set(s.n, s.label); });
+  return { S, sizeOf: p => { const s = raw(p); return s && { label: canon.get(s.n), n: s.n }; }, all: [...canon].map(([n, label]) => ({ n, label })).sort((a, b) => b.n - a.n) };
+}
+export const catUrl = c => "category.html?cat=" + encodeURIComponent(c);
+export const brandUrl = b => "category.html?brand=" + encodeURIComponent(b);
+// product-list link from filters, for example listUrl({ cat: "Televisions", brand: "Elista" }); empty values are left out
+export const listUrl = o => "category.html?" + new URLSearchParams(Object.entries(o).filter(([, v]) => v)).toString();
+export const off = p => Math.round((1 - p.price / p.mrp) * 100);
+export const avg = p => p.reviews && p.reviews.length ? p.reviews.reduce((t, r) => t + r.rating, 0) / p.reviews.length : 0;
+export const starRow = n => "★".repeat(n) + "☆".repeat(5 - n);
+
+// delivery estimate from the store's standard promise of 3 to 5 days, as "Thu, 9 Oct to Sat, 11 Oct"
+const day = (from, n) => new Date(+new Date(from) + n * 864e5).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+export const eta = (from = Date.now()) => [day(from, 3), day(from, 5)];
+export const etaText = from => eta(from).join(" to ");
+// No Cost EMI: the price split over 3, 6 and 9 months with no interest, as [months, per month]
+export const emiPlans = price => [3, 6, 9].map(n => [n, Math.ceil(price / n)]);

@@ -1,0 +1,77 @@
+# Mytekkstore online store
+
+A working online store for **Mytekkstore**, selling **Elista** and **Telefunken** televisions, washing machines and air conditioners.
+
+## Run it
+
+1. Install Node.js from https://nodejs.org if it is not installed.
+2. Double-click `start.bat` (or run `node server.js`). The store opens at http://localhost:3000.
+3. The admin sign-in is in `data/ADMIN_LOGIN.txt`. Sign in on the site, then open http://localhost:3000/admin.html.
+
+Nothing to install to run it: the finished storefront is already built into `public/`, and the server is plain Node.js.
+
+The minimized "Mytekkstore store" window watches the server and starts it again within 3 seconds if it ever stops. A dated copy of the data files is kept in `data/backups/` (one per day, 14 days); to restore one, copy it back over `data/<name>.json`.
+
+### Changing the storefront (React)
+
+The pages are React components in `web/src`. After editing them, build once and the server serves the result:
+
+```
+cd web
+npm install        (first time only)
+npm run build      (writes the pages and one bundle into ../public)
+```
+
+`npm run dev` inside `web` gives a live-reloading dev server on port 5173 that talks to the store on port 3000. The server, the data folder, the admin and the tests do not change. One thing the React build does not support is opening a page by double-clicking the HTML file; run start.bat instead.
+
+### Optional: SMS and Google sign-in
+
+Set these before starting the server (in the terminal, or at the top of `start.bat` where the lines are ready, commented out):
+
+| Variable | What it switches on |
+|---|---|
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | Order confirmation messages and sign-in codes by SMS through Twilio. `TWILIO_FROM` is your Twilio number, or `whatsapp:+1...` for WhatsApp |
+| `SMS_COUNTRY_CODE` | Country code added to mobile numbers typed without one. Default `+91` |
+| `GOOGLE_CLIENT_ID` | The "Continue with Google" button on the sign-in page |
+| `BREVO_API_KEY`, `MAIL_FROM` | Sign-in codes by email and order emails through Brevo (free tier) |
+| `OTP_DEMO` | `1` shows sign-in codes on the page for a client walkthrough. Remove before real customers use the site |
+
+Without the Twilio or Brevo variables, messages are recorded in the admin outbox and, on localhost only, the sign-in code is shown on the page so the flow can be tried.
+
+### Show it to the client on a public link
+
+With the store running, double-click `go-live.bat`. It opens a free Cloudflare quick tunnel (no account) and prints an https address you can send to anyone. Close the window to go offline. Add `set OTP_DEMO=1` to start.bat first if the walkthrough should show sign-in codes on screen.
+
+### Put it on Vercel (public link that stays up)
+
+The repo deploys as-is: `api/index.js` runs `server.js` as one Vercel function and `vercel.json` routes every address to it.
+
+1. Push the code to GitHub (this repo: https://github.com/automation-wq/Ellista).
+2. At https://vercel.com/new import the repository, leave every setting as detected, and click Deploy.
+3. In the Vercel project open Settings, Environment Variables, and add `ADMIN_PASSWORD` (sign in at `/admin.html` as admin@mytekkstore.local with it). Add `OTP_DEMO=1` if the walkthrough should show sign-in codes on screen. Redeploy once after adding them.
+
+The site is then at `https://<project-name>.vercel.app`, and every push to `main` deploys again. Vercel has no disk: orders, accounts, admin edits and uploaded photos last only until Vercel starts a fresh copy (after a few minutes with no visitors). That is fine for showing the store; move the data to a database before taking real orders.
+
+## How it works
+
+| Part | File | What it does |
+|---|---|---|
+| Server | `server.js` | Serves the pages and the `/api/...` routes. Products, orders and accounts are saved as JSON files in `data/`. Prices and stock are always checked on the server, never trusted from the browser |
+| Storefront | `web/src` (React: components, pages, store, motion, stylesheet), built into `public/` | Home, category pages with explore-by-size tiles and the TV size guide, product pages, festive offers page with bank offers and No Cost EMI, cart drawer, checkout, sign-in page (mobile code, email, Google), account, order page, info pages. The header category menus open by hovering (mouse), one tap (phone) or Tab (keyboard) |
+| Admin | `web/src/admin.jsx` | Orders and order status, products with photo upload and the No Cost EMI flag, outbox of customer messages with their sent status |
+| Sample catalogue | `public/seed-data.js` | 9 sample products. Loaded into `data/products.json` on first start |
+| Clips | `public/img/v-*.mp4` | Three free Pexels clips behind the hero slides and category tiles (free licence, commercial use) |
+| Web standards | `server.js` | Server-written SEO and sharing tags, schema.org product data, sitemap and robots files, gzip and caching, security headers, web app manifest (see TRD section 10) |
+| Tests | `test.js`, `test-ui.js` | `node test.js` checks the API (orders, stock, accounts, admin, request safety). `node test-ui.js` drives a real headless Edge or Chrome through the menus, cart, keyboard and phone taps |
+
+## Documents
+
+- `docs/PRD.md`: what the store must do and what the client still needs to supply.
+- `docs/TRD.md`: how it is built, how to launch it, and how to add OTP sign-in later.
+- `docs/APP_FLOW.md`: every page and where it leads, plus what works today.
+- `docs/APP_DESIGN.md`: colours, type, layouts, components and motion.
+- `docs/LAUNCH_READINESS.md`: the plain answer for the client on what is ready, what keeps the store up, and what is still needed to open to the public.
+
+## Before launch
+
+Replace the sample products, photos, logo, colours, and the placeholder Shipping, Returns, Terms and Privacy text with the client's own. Replace the sample bank offers (`BANK_OFFERS` in `web/src/data.js`) with the real terms and untick No Cost EMI on products that do not have it. Connect a payment gateway, and set the Twilio and Google variables (see `docs/TRD.md` section 11).

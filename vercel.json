@@ -1,0 +1,6 @@
+{
+  "regions": ["bom1"],
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "functions": { "api/index.js": { "includeFiles": "public/**" } },
+  "build": { "env": { "NODEJS_HELPERS": "0" } }
+}

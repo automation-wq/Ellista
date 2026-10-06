@@ -1,0 +1,371 @@
+// Browser check for the storefront. Run: node test-ui.js
+// It drives a real headless browser (Edge or Chrome) with real mouse moves, taps and key presses, against its own copy of
+// the store on a free port with a temporary data folder, so real orders and accounts are never touched.
+// Other scripts can reuse the pieces: const { startStore, launch, sleep } = require("./test-ui.js")
+const assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path"), { spawn } = require("child_process");
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const BROWSER = ["C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
+  "C:/Program Files/Google/Chrome/Application/chrome.exe", "/usr/bin/google-chrome", "/usr/bin/chromium"].find(p => fs.existsSync(p));
+
+// Starts the store. One store per process, because server.js reads DATA_DIR when it is first loaded.
+function startStore() {
+  process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "mytekk-ui-"));
+  const server = require("./server.js");
+  return new Promise(res => server.listen(0, "127.0.0.1", () => res({
+    base: "http://127.0.0.1:" + server.address().port,
+    close() { server.close(); server.closeAllConnections(); fs.rmSync(process.env.DATA_DIR, { recursive: true, force: true }); },
+  })));
+}
+
+// Opens a headless browser window and returns helpers to drive it. Give each browser running at the same time its own port.
+async function launch({ port = 9555, width = 1366, height = 800, mobile = false } = {}) {
+  if (!BROWSER) throw new Error("No Edge or Chrome found");
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), "mytekk-browser-"));
+  const proc = spawn(BROWSER, ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--remote-debugging-port=" + port,
+    "--user-data-dir=" + profile, `--window-size=${width},${height}`, "about:blank"], { stdio: "ignore" });
+  let target;
+  for (let i = 0; i < 60 && !target; i++) {
+    await sleep(250);
+    try { target = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === "page"); } catch {}
+  }
+  if (!target) { proc.kill(); throw new Error("The browser did not start"); }
+  const ws = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error("Could not connect to the browser")); });
+  let seq = 0, onLoad = null, at = [0, 0];
+  const waiting = new Map(), errors = []; // errors: uncaught exceptions, console.error calls and failed requests seen so far
+  ws.onmessage = m => {
+    const d = JSON.parse(m.data);
+    if (d.id) { const w = waiting.get(d.id); waiting.delete(d.id); return d.error ? w.rej(new Error(d.error.message)) : w.res(d.result); }
+    if (d.method === "Page.loadEventFired" && onLoad) { onLoad(); onLoad = null; }
+    if (d.method === "Runtime.exceptionThrown") errors.push(d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text);
+    if (d.method === "Runtime.consoleAPICalled" && d.params.type === "error") errors.push(d.params.args.map(a => a.value ?? a.description).join(" "));
+    if (d.method === "Log.entryAdded" && d.params.entry.level === "error") errors.push(d.params.entry.text + " " + (d.params.entry.url || ""));
+  };
+  const send = (method, params = {}) => new Promise((res, rej) => { waiting.set(++seq, { res, rej }); ws.send(JSON.stringify({ id: seq, method, params })); });
+  for (const d of ["Page", "Runtime", "Log"]) await send(d + ".enable");
+  await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile });
+  if (mobile) await send("Emulation.setTouchEmulationEnabled", { enabled: true });
+  const KEYS = { Tab: 9, Enter: 13, Escape: 27 };
+  const mouse = (type, x, y, extra = {}) => send("Input.dispatchMouseEvent", { type, x, y, ...extra });
+  // runs JavaScript in the page and returns its value; promises are awaited
+  const ev = async expression => {
+    const r = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
+    if (r.exceptionDetails) throw new Error("In page: " + (r.exceptionDetails.exception?.description || r.exceptionDetails.text));
+    return r.result.value;
+  };
+  // waits for the page that an action loads, and for the store script to finish drawing it
+  const afterLoad = async action => {
+    let timer;
+    const loaded = new Promise((res, rej) => { onLoad = res; timer = setTimeout(() => rej(new Error("Page did not load in 20 s")), 20000); });
+    try {
+      // an address that differs only after the # stays on the same page, so no load follows
+      if (await action() === "same page") onLoad = null; else await loaded;
+    } finally { clearTimeout(timer); }
+    await ev("typeof ready === 'undefined' ? 0 : ready.then(() => new Promise(r => setTimeout(r, 80)))");
+  };
+  return {
+    errors, ev, send, afterLoad,
+    goto: url => afterLoad(async () => (await send("Page.navigate", { url })).loaderId ? "new page" : "same page"),
+    // centre of the n-th element matching a selector, scrolled into view first
+    center: (sel, n = 0) => ev(`(() => { const el = document.querySelectorAll(${JSON.stringify(sel)})[${n}]; if (!el) throw new Error("No element " + ${JSON.stringify(sel)} + " #${n}");
+      el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" }); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`),
+    async move(x, y) { at = [x, y]; await mouse("mouseMoved", x, y); },
+    // moves the pointer in small steps, like a hand would
+    async glide(x, y, ms = 200) {
+      const [x0, y0] = at, steps = Math.max(2, Math.round(ms / 16));
+      for (let i = 1; i <= steps; i++) { await mouse("mouseMoved", Math.round(x0 + (x - x0) * i / steps), Math.round(y0 + (y - y0) * i / steps)); await sleep(ms / steps); }
+      at = [x, y];
+    },
+    async click(x, y) { at = [x, y]; await mouse("mouseMoved", x, y); await mouse("mousePressed", x, y, { button: "left", clickCount: 1 }); await mouse("mouseReleased", x, y, { button: "left", clickCount: 1 }); },
+    async tap(x, y) { await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] }); await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); },
+    async key(key, { shift = false } = {}) {
+      const k = { key, code: key, windowsVirtualKeyCode: KEYS[key], modifiers: shift ? 8 : 0 };
+      await send("Input.dispatchKeyEvent", { type: "keyDown", ...k, ...(key === "Enter" && { text: "\r" }) });
+      await send("Input.dispatchKeyEvent", { type: "keyUp", ...k });
+    },
+    async shot(file) { fs.writeFileSync(file, Buffer.from((await send("Page.captureScreenshot", { format: "png" })).data, "base64")); },
+    async close() { try { await send("Browser.close"); } catch {} proc.kill(); await sleep(300); try { fs.rmSync(profile, { recursive: true, force: true }); } catch {} },
+  };
+}
+
+async function run() {
+  const store = await startStore(), b = await launch(), base = store.base;
+  const open = (w = b) => w.ev(`[...document.querySelectorAll(".l0.open .l0link")].map(a => a.textContent).join()`);
+  // font files may be unreachable offline; that is not a storefront fault
+  // a 4xx answer from our own API is a handled reply (for example a wrong sign-in code), not a page fault
+  const realErrors = w => w.errors.filter(e => !/fonts\.(googleapis|gstatic)/.test(e) && !/Failed to load resource: the server responded with a status of 4\d\d .*\/api\//.test(e));
+  let step = "start";
+  try {
+    step = "bar contents";
+    await b.goto(base + "/");
+    assert.equal(await b.ev(`document.querySelector("#hdr").innerText.includes("Menu")`), false, "the old Menu button is gone");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".l0link")].map(a => a.textContent)`), ["Televisions", "Washing Machines", "Air Conditioners", "Brands", "Deals"]);
+    assert.equal(await open(), "", "no menu is open at the start");
+
+    step = "hover opens after a short delay";
+    // The page itself records when the pointer entered a category and when a menu opened,
+    // so the timing checks do not depend on how quickly this script talks to the browser.
+    await b.ev(`window.navLog = []; document.querySelectorAll(".l0").forEach(l => l.addEventListener("pointerenter", () => navLog.push(["enter", performance.now()])));
+      new MutationObserver(ms => ms.forEach(m => m.target.classList.contains("open") && navLog.push(["open", performance.now()])))
+        .observe(document.querySelector(".gbar"), { subtree: true, attributes: true, attributeFilter: ["class"] }); 0`);
+    const tv = await b.center(".l0link", 0), away = [700, 720];
+    await b.move(...away);
+    await b.glide(...tv, 120);
+    // wait for the panel and the dim layer to finish fading in (the machine may be busy)
+    for (let i = 0; i < 25 && +(await b.ev(`getComputedStyle(document.querySelector(".navshade")).opacity`)) < 0.95; i++) await sleep(100);
+    assert.equal(await open(), "Televisions");
+    const log = await b.ev(`navLog`), delay = log.find(e => e[0] === "open")[1] - log.find(e => e[0] === "enter")[1];
+    assert.ok(delay >= 120 && delay < 400, `the menu should open a moment after the pointer arrives, not instantly; it took ${Math.round(delay)} ms`);
+    const panel = await b.ev(`(() => { const p = document.querySelector(".l0.open .npanel"), r = p.getBoundingClientRect(), s = getComputedStyle(p), h = document.querySelector("#hdr").getBoundingClientRect();
+      return { vis: s.visibility, opacity: +s.opacity, left: r.left, width: r.width, top: r.top, bottom: r.bottom, hdrBottom: h.bottom, vw: document.documentElement.clientWidth, vh: innerHeight,
+        expanded: document.querySelector(".l0.open .l0link").getAttribute("aria-expanded"), shade: getComputedStyle(document.querySelector(".navshade")).opacity,
+        tiles: p.querySelectorAll(".ntile").length, prods: p.querySelectorAll(".nprod").length, links: [...p.querySelectorAll(".ndisc a")].map(a => a.textContent.trim().split("\\n")[0]) }; })()`);
+    assert.equal(panel.vis, "visible"); assert.ok(panel.opacity > 0.95, "panel has faded in");
+    assert.equal(panel.left, 0); assert.equal(panel.width, panel.vw, "panel spans the full width");
+    assert.ok(Math.abs(panel.top - panel.hdrBottom) <= 2, "panel sits directly under the header");
+    assert.ok(panel.bottom <= panel.vh, "panel fits in the window");
+    assert.equal(panel.expanded, "true"); assert.ok(+panel.shade > 0.9, "page behind is dimmed");
+    assert.equal(panel.tiles, 6); assert.equal(panel.prods, 4);
+    assert.equal(panel.links[0], "TV size guide"); assert.ok(panel.links.includes("Top features"));
+
+    step = "moving into the panel keeps it open";
+    await b.glide(...await b.center(".l0.open .ntile", 2), 250);
+    await sleep(400);
+    assert.equal(await open(), "Televisions");
+    await b.glide(...await b.center(".l0.open .nprod", 3), 250);
+    await sleep(400);
+    assert.equal(await open(), "Televisions");
+
+    step = "moving to another category switches";
+    await b.glide(...await b.center(".l0link", 1), 250);
+    await sleep(400);
+    assert.equal(await open(), "Washing Machines");
+
+    step = "leaving closes";
+    await b.glide(...away, 200);
+    await sleep(500);
+    assert.equal(await open(), "");
+    assert.equal(await b.ev(`getComputedStyle(document.querySelector(".npanel")).visibility`), "hidden");
+
+    step = "a quick pass over the bar opens nothing";
+    // Timed inside the page, because the browser merges real mouse moves that arrive in the same instant.
+    const flashed = await b.ev(`(async () => { navLog.length = 0; const li = document.querySelector(".l0"), wait = ms => new Promise(r => setTimeout(r, ms));
+      li.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" })); await wait(60);
+      li.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" })); await wait(450);
+      return navLog.filter(e => e[0] === "open").length; })()`);
+    assert.equal(flashed, 0, "no menu opened during a 60 ms pass over a category");
+    assert.equal(await open(), "");
+
+    step = "a click right after leaving a hover menu reaches the page";
+    await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
+    assert.equal(await open(), "Televisions");
+    const cardLink = await b.center("main .card a", 0);
+    await b.glide(...cardLink, 120); // leave the menu and click a product at once, inside the menu's closing delay
+    await b.afterLoad(async () => b.click(...cardLink));
+    assert.equal(await b.ev(`document.body.dataset.page`), "product", "the dim layer must not swallow that click");
+    await b.goto(base + "/");
+    await b.move(...away);
+
+    step = "the name is the only control: an outside click closes the menu, a click on the name opens the category page";
+    assert.equal(await b.ev(`document.querySelectorAll(".l0btn").length`), 0, "there is no arrow button beside the names");
+    await b.glide(...await b.center(".l0link", 2), 150); await sleep(450);
+    assert.equal(await open(), "Air Conditioners");
+    assert.equal(await b.ev(`document.querySelector(".l0.open .l0link").getAttribute("aria-expanded")`), "true");
+    await b.click(...away); await sleep(120);
+    assert.equal(await open(), "", "a click on the dimmed page closes the menu");
+    await b.afterLoad(async () => b.click(...await b.center(".l0link", 2)));
+    assert.ok((await b.ev(`location.search`)).includes("Air"), "a mouse click on a category name goes to its page");
+    await b.goto(base + "/");
+
+    step = "keyboard";
+    await b.move(...away);
+    await b.ev(`document.querySelector("[data-drawer]").focus()`); // the cart icon is the last control before the category bar
+    await b.key("Tab"); await sleep(150);
+    assert.equal(await b.ev(`document.activeElement.textContent`), "Televisions");
+    assert.equal(await open(), "Televisions", "reaching a category name with Tab opens its menu");
+    await b.key("Tab");
+    assert.equal(await b.ev(`document.activeElement.className`), "ntile", "Tab moves from the name into the panel");
+    await b.key("Escape"); await sleep(100);
+    assert.equal(await open(), "");
+    assert.equal(await b.ev(`document.activeElement === document.querySelectorAll(".l0link")[0]`), true, "Escape returns focus to the category name");
+    await b.key("Tab", { shift: true }); await b.key("Tab"); await sleep(150);
+    assert.equal(await open(), "Televisions", "coming back to the name with the keyboard opens it again");
+    const count = await b.ev(`document.querySelectorAll(".l0.open .npanel a").length`);
+    for (let i = 0; i <= count; i++) await b.key("Tab");
+    await sleep(200);
+    assert.equal(await b.ev(`document.activeElement.textContent`), "Washing Machines", "Tab leaves the panel for the next category");
+    assert.equal(await open(), "Washing Machines", "which opens in turn while the first one closed");
+    await b.key("Escape"); await sleep(100);
+
+    step = "add to cart still works";
+    await b.click(...await b.center("main [data-add]", 0));
+    await sleep(250);
+    assert.equal(await b.ev(`document.querySelector("#cartN").textContent`), "1");
+
+    step = "every menu link leads to a real page";
+    const hrefs = await b.ev(`[...new Set([...document.querySelectorAll(".gnav a")].map(a => a.href))]`);
+    assert.ok(hrefs.length > 30, "expected many menu links, found " + hrefs.length);
+    for (const h of hrefs) {
+      const hash = new URL(h).hash;
+      if (hash) await b.goto(base + "/cart.html"); // arrive from another page, so the section has to be found after a full load
+      await b.goto(h);
+      if (hash) await sleep(900); // the page scrolls smoothly to the section
+      const r = await b.ev(`(() => { const t = ${JSON.stringify(hash)} && document.querySelector(${JSON.stringify(hash || "x")}); return { page: document.body.dataset.page, cards: document.querySelectorAll("main .card").length,
+        pdp: !!document.querySelector(".pdp"), h1: (document.querySelector("main h1") || {}).textContent, top: t ? t.getBoundingClientRect().top : null, hdr: document.querySelector("#hdr").getBoundingClientRect().bottom, vh: innerHeight }; })()`);
+      if (r.page === "category" && !h.includes("wish=1")) assert.ok(r.cards > 0, "no products at " + h);
+      if (r.page === "product") assert.ok(r.pdp, "no product at " + h);
+      if (r.page === "page") assert.notEqual(r.h1, "Page not found", h);
+      if (hash) assert.ok(r.top !== null && r.top >= r.hdr - 2 && r.top < r.vh * 0.6, `section ${hash} should be in view under the header at ${h}, its top is ${r.top}`);
+    }
+
+    step = "a guide link on the same page closes the menu and scrolls";
+    await b.goto(base + "/category.html?cat=Televisions");
+    assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Televisions", "the current category is marked in the bar");
+    await b.move(...away);
+    await b.glide(...await b.center(".l0link", 0), 120); await sleep(450);
+    await b.click(...await b.center(".l0.open .ndisc a", 0));
+    await sleep(1100);
+    assert.equal(await b.ev(`location.hash`), "#guide");
+    assert.equal(await open(), "");
+    const g = await b.ev(`document.querySelector("#guide").getBoundingClientRect().top`);
+    assert.ok(g > 0 && g < 480, "the guide is in view, its top is " + g);
+
+    step = "product page: size switcher, delivery check, share, rating bars";
+    await b.goto(base + "/product.html?id=2");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".sizes .chip b")].map(a => a.textContent)`), ["32 inch", "43 inch", "55 inch"]);
+    assert.equal(await b.ev(`document.querySelector(".sizes .chip.on b").textContent`), "55 inch");
+    await b.afterLoad(async () => b.click(...await b.center(".sizes .chip", 0)));
+    assert.equal(await b.ev(`document.querySelector("main h1").textContent`), "Elista 80 cm (32 inch) HD Ready Smart LED TV", "the 32 inch chip opens the 32 inch model");
+    await b.ev(`(() => { const f = document.querySelector("#pincheck"); f.pin.value = "560001"; f.requestSubmit(); })()`);
+    for (let i = 0; i < 80 && (await b.ev(`document.querySelector("#pinmsg").textContent`)) === "Checking…"; i++) await sleep(100); // India Post lookup
+    assert.match(await b.ev(`document.querySelector("#pinmsg").textContent`), /Delivery available to 560001/);
+    await b.ev(`(() => { const f = document.querySelector("#pincheck"); f.pin.value = "12"; f.requestSubmit(); })()`);
+    assert.match(await b.ev(`document.querySelector("#pinmsg").textContent`), /6-digit/);
+    assert.ok(await b.ev(`!!document.querySelector("#share")`), "share button present");
+    assert.equal(await b.ev(`document.querySelectorAll(".rbars div").length`), 5, "rating bars on a reviewed product");
+    const cmp = await b.ev(`({ cols: document.querySelectorAll(".ctable thead th").length - 1, diff: document.querySelectorAll(".ctable tr.diff").length, me: document.querySelector(".ctable thead th.me .stock").textContent, buys: document.querySelectorAll(".ctable .buy .btn").length })`);
+    assert.equal(cmp.cols, 4, "this TV compared with three others"); assert.ok(cmp.diff > 0, "differing rows are marked");
+    assert.equal(cmp.me, "This product"); assert.equal(cmp.buys, 4, "add to cart in every column");
+    const pdp = await b.ev(`({ feats: document.querySelectorAll(".fstrip .ft").length, emi: !!document.querySelector(".emiline"), share: document.querySelectorAll(".sharerow a").length, sw: document.querySelectorAll(".chip.sw small").length, pill: !!document.querySelector(".pill") })`);
+    assert.ok(pdp.feats >= 4, "feature strip under the photo"); assert.ok(pdp.emi, "EMI per month line"); assert.equal(pdp.share, 3, "share links");
+    assert.ok(pdp.sw >= 3, "size swatches show prices"); assert.ok(pdp.pill, "delivery pill");
+    const picks = await b.ev(`document.querySelectorAll(".bundle input[name=pick]").length`);
+    assert.ok(picks >= 1, "add-on box offers products from the other categories");
+    const before = +(await b.ev(`document.querySelector("#cartN").textContent`)) || 0;
+    await b.click(...await b.center("#addAll")); await sleep(400);
+    assert.equal(+(await b.ev(`document.querySelector("#cartN").textContent`)), before + picks + 1, "Add all puts this product and the ticked ones in the cart");
+    assert.equal(await b.ev(`document.body.classList.contains("cart-open")`), true, "and opens the cart drawer");
+    await b.key("Escape"); await sleep(300);
+    assert.equal(await b.ev(`/\\p{Extended_Pictographic}/u.test(document.querySelector("#hdr").innerText + document.querySelector(".perks").innerText)`), false, "no emoji icons left in the header or perks");
+    await b.ev("scrollTo(0, document.body.scrollHeight)"); await sleep(600);
+    assert.equal(await b.ev(`document.querySelector(".subnav").classList.contains("on")`), true, "the sub-nav appears once Add to cart has scrolled away");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".stabs a")].map(a => a.textContent)`), ["Overview", "Specs", "Compare", "Reviews"]);
+    assert.equal(await b.ev(`document.querySelector(".stabs a.on").textContent`), "Compare", "the sub-nav marks the section in view");
+    assert.equal(await b.ev(`getComputedStyle(document.querySelector(".pdp .actions .btn")).borderRadius`), "999px", "pill buttons");
+    await b.goto(base + "/");
+    const clips = await b.ev(`({ hero: document.querySelectorAll(".slide").length, tiles: document.querySelectorAll(".kcat").length, texts: [...document.querySelectorAll(".ktext b")].map(b => b.textContent), arrows: [...document.querySelectorAll(".strip")].filter(x => !x.classList.contains("nos") && x.querySelector(".row").scrollWidth <= x.querySelector(".row").clientWidth + 2).length })`);
+    assert.equal(clips.hero, 3, "three hero banners"); assert.equal(clips.tiles, 3, "a tile per category");
+    assert.deepEqual(clips.texts, ["Televisions", "Washing Machines", "Air Conditioners"], "category tiles carry their names");
+    assert.equal(clips.arrows, 0, "a row that fits on the screen shows no scroll arrows");
+    await b.goto(base + "/category.html?cat=Televisions");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".finder .tile b")].map(b => b.textContent)`), ["TVs by Size", "Elista TVs", "Telefunken TVs", "4K Ultra HD", "Google TV"], "a category's explore row shows only that category");
+    assert.equal(await b.ev(`document.querySelectorAll(".fbar, .ftrack").length`), 0, "no scroll line or arrow buttons under the explore tiles (client decision)");
+    assert.ok(await b.ev(`!!document.querySelector(".kv .kvimg") && document.querySelector(".kv h1").textContent === "Explore TVs by Size"`), "the category headline sits on its lifestyle photo");
+    assert.ok(await b.ev(`!!document.querySelector(".topf video.bvid") && document.querySelectorAll(".tf svg").length === 6`), "the Top features band has its room clip and line icons");
+
+    step = "offers page, bank offers and the No Cost EMI tag";
+    await b.goto(base + "/offers.html");
+    assert.ok(await b.ev(`document.querySelectorAll(".fest .sparks i").length`) > 10, "festive sparks");
+    assert.equal(await b.ev(`document.querySelectorAll(".ftile").length`), 3, "one offer tile per category");
+    assert.equal(await b.ev(`document.querySelectorAll(".offer").length`), 4, "bank offer cards");
+    assert.ok(await b.ev(`document.querySelectorAll(".card .emi").length`) > 0, "No Cost EMI tags on deal cards");
+    assert.equal(await b.ev(`document.querySelector(".l0.cur .l0link").textContent`), "Deals", "Deals is marked current in the bar");
+    await b.goto(base + "/");
+    assert.equal(await b.ev(`document.querySelectorAll("#bank .offer").length`), 4, "bank offers on the home page");
+    assert.equal(await b.ev(`document.querySelectorAll(".sizerow").length`), 3, "a shop-by-size row per category on the home page");
+    assert.ok(await b.ev(`document.querySelectorAll(".faqs details").length >= 5 && document.querySelectorAll(".quote").length > 0`), "Good to know questions and customer quotes on the home page");
+    assert.equal(await b.ev(`document.querySelector(".wide").getAttribute("href")`), "offers.html", "the festive banner opens the offers page");
+    await b.goto(base + "/product.html?id=1");
+    assert.ok(await b.ev(`!!document.querySelector(".pdp .emiline") && document.querySelectorAll(".pofs div").length === 3`), "EMI line and offers box on the product page");
+    assert.ok(await b.ev(`document.querySelectorAll("#t-specs .grp").length >= 2`), "grouped specifications on the product page");
+
+    step = "every link on the main pages opens a real page";
+    const seen = new Set(), skip = /checkout\.html|order\.html|admin\.html|#/;
+    for (const start of ["/", "/offers.html", "/product.html?id=2", "/account.html", "/page.html?p=about"]) {
+      await b.goto(base + start);
+      for (const h of await b.ev(`[...document.querySelectorAll("a[href]")].map(a => a.href)`)) if (h.startsWith(base) && !skip.test(h)) seen.add(h);
+    }
+    assert.ok(seen.size > 40, "expected many links, found " + seen.size);
+    for (const h of seen) {
+      await b.goto(h);
+      const r = await b.ev(`({ page: document.body.dataset.page, h1: (document.querySelector("main h1") || {}).textContent || "" })`);
+      assert.notEqual(r.page, "notfound", "dead link " + h);
+      assert.ok(!/not found/i.test(r.h1), "dead link " + h + ": " + r.h1);
+    }
+
+    step = "sign in with a mobile number and a code";
+    await b.goto(base + "/account.html");
+    assert.deepEqual(await b.ev(`[...document.querySelectorAll(".acard .tabbar button")].map(x => x.textContent)`), ["Mobile number or email", "Password"]);
+    assert.equal(await b.ev(`document.querySelectorAll("#gbtn").length`), 0, "no Google button until a client id is set");
+    const otpText = sel => b.ev(`document.querySelector(${JSON.stringify(sel)}).textContent`);
+    await b.ev(`(() => { const f = document.querySelector("#otp"); f.to.value = "98765 43210"; f.requestSubmit(); })()`);
+    for (let i = 0; i < 40 && !/\d{6}/.test(await otpText("#otpnote")); i++) await sleep(100);
+    const code = /(\d{6})/.exec(await otpText("#otpnote"));
+    assert.ok(code, "on localhost the code is shown on the page");
+    assert.equal(await b.ev(`document.querySelector("#codeRow").hidden`), false, "the code field appears");
+    await b.ev(`(() => { const f = document.querySelector("#otp"); f.code.value = ${JSON.stringify(String((+code[1] + 1) % 1e6).padStart(6, "0"))}; f.requestSubmit(); })()`);
+    for (let i = 0; i < 40 && !(await otpText("#otp .err")); i++) await sleep(100);
+    assert.match(await otpText("#otp .err"), /Wrong code/);
+    await b.ev(`(() => { const f = document.querySelector("#otp"); f.code.value = ${JSON.stringify(code[1])}; f.requestSubmit(); })()`);
+    for (let i = 0; i < 40 && (await b.ev(`document.querySelector("#nameRow").hidden`)); i++) await sleep(100);
+    assert.equal(await b.ev(`document.querySelector("#nameRow").hidden`), false, "a new number is asked for a name");
+    await b.afterLoad(async () => b.ev(`(() => { const f = document.querySelector("#otp"); f.name.value = "Priya"; f.requestSubmit(); })()`));
+    assert.equal(await b.ev(`document.querySelector("main h1").textContent`), "Hello, Priya");
+    assert.ok(await b.ev(`document.body.innerText.includes("Mobile verified")`), "the profile shows the number as verified");
+    await b.afterLoad(async () => b.ev(`document.querySelector("#logout").click()`));
+    assert.equal(await b.ev(`document.querySelector(".hlink span").textContent`), "Sign in", "signed out again");
+
+    step = "other pages load without errors";
+    for (const p of ["/product.html?id=1", "/cart.html", "/account.html", "/admin.html", "/page.html?p=about", "/offers.html"]) {
+      await b.goto(base + p);
+      assert.equal(await b.ev(`document.querySelectorAll(".l0").length`), 5, "the bar is missing on " + p);
+    }
+    // checkout sends a signed-out shopper (there is one item in the cart) on to the sign-in page, so wait for that second page
+    await b.goto(base + "/checkout.html").catch(() => {});
+    let where = "";
+    for (let i = 0; i < 40 && !where.endsWith("account.html"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
+    assert.ok(where.endsWith("account.html"), "checkout should send a signed-out shopper to sign in, but ended at " + where);
+    await b.goto(base + "/order.html?id=MT0000000000").catch(() => {}); // an order page is private too
+    where = "";
+    for (let i = 0; i < 40 && !where.endsWith("account.html"); i++) { await sleep(150); try { where = await b.ev("location.pathname"); } catch {} }
+    assert.ok(where.endsWith("account.html"), "an order page should send a signed-out visitor to sign in, but ended at " + where);
+    assert.deepEqual(realErrors(b), [], "script errors on desktop: " + JSON.stringify(realErrors(b)));
+
+    step = "phone: taps";
+    const m = await launch({ port: 9556, width: 390, height: 780, mobile: true });
+    try {
+      await m.goto(base + "/");
+      assert.ok(await m.ev(`document.documentElement.scrollWidth <= innerWidth`), "the page must not scroll sideways on a phone");
+      await m.tap(...await m.center(".l0link", 0)); await sleep(400);
+      assert.equal(await open(m), "Televisions", "one tap on a category name opens its menu");
+      assert.equal(await m.ev("location.pathname"), "/", "and stays on the page");
+      const mp = await m.ev(`(() => { const r = document.querySelector(".l0.open .npanel").getBoundingClientRect(); return { left: r.left, width: r.width, bottom: r.bottom, vw: document.documentElement.clientWidth, vh: innerHeight, wide: document.documentElement.scrollWidth }; })()`);
+      assert.equal(mp.left, 0); assert.equal(mp.width, mp.vw); assert.ok(mp.bottom <= mp.vh + 1, "the panel fits the phone screen and scrolls inside");
+      assert.ok(mp.wide <= mp.vw, "an open menu must not make the page scroll sideways");
+      await m.tap(...await m.center(".l0link", 1)); await sleep(400);
+      assert.equal(await open(m), "Washing Machines", "a tap on another name switches to its menu");
+      await m.afterLoad(async () => m.tap(...await m.center(".l0link", 1)));
+      assert.ok((await m.ev(`location.search`)).includes("Washing"), "a second tap on the open name goes to its page");
+      assert.deepEqual(realErrors(m), [], "script errors on a phone: " + JSON.stringify(realErrors(m)));
+    } finally { await m.close(); }
+
+    console.log("ALL UI TESTS PASSED");
+  } catch (e) { console.error(`UI TEST FAILED at "${step}":`, e.message); process.exitCode = 1; }
+  await b.close();
+  store.close();
+}
+
+module.exports = { startStore, launch, sleep };
+if (require.main === module) {
+  if (BROWSER) run(); else console.log("UI tests skipped: no Edge or Chrome found");
+}

@@ -1,0 +1,122 @@
+// Home page: kinetic hero with a spotlight product, numbers that count up, category tiles, a "built for your home" bento,
+// deals, one block per category (banner plus four products, the Samsung home-page pattern), brands, customer quotes, bank
+// offers, festive banner, why-us and a Good to know list. Marketing lines come from TOP_FEATURES so they only claim what the catalogue supports.
+import { useEffect, useRef, useState } from "react";
+import { useStore } from "./store.jsx";
+import { Card, Row, BankOffers, Ico } from "./components.jsx";
+import { DRAW_ICONS, CAT_SIZE, BANK_OFFERS, KV_IMG, TOP_FEATURES, GUIDES, FAQ, catSizes, catUrl, brandUrl, listUrl, off, starRow } from "./data.js";
+
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// [headline lines, line, category, banner image]. Banners are generated for this store (see docs/APP_DESIGN.md section 7)
+const SLIDES = [
+  { h: ["Smart TVs.", "Smarter prices."], s: "Elista and Telefunken TVs, now in store.", c: "Televisions", im: "hero0" },
+  { h: ["Laundry day,", "sorted."], s: "Front load, top load and semi automatic.", c: "Washing Machines", im: "hero1" },
+  { h: ["Beat the heat."], s: "Inverter ACs with big savings.", c: "Air Conditioners", im: "hero2" },
+];
+
+// numbers roll up from 0 the first time they scroll into view
+function useCountUp(ref) {
+  useEffect(() => {
+    const els = $$("[data-n]", ref.current);
+    if (reduced()) { els.forEach(el => { el.textContent = el.dataset.n; }); return; }
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      const el = e.target, end = +el.dataset.n, t0 = performance.now();
+      const step = t => { const k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(end * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }), { threshold: .6 });
+    els.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
+export function Home() {
+  const { P, CATS, BRANDS, catImg, recent, byId, money } = useStore();
+  const [cur, setCur] = useState(0);
+  const heroRef = useRef(), numRef = useRef();
+  const show = n => setCur((n + SLIDES.length) % SLIDES.length);
+  useEffect(() => { const t = setInterval(() => { if (!heroRef.current || !heroRef.current.matches(":hover")) setCur(c => (c + 1) % SLIDES.length); }, 5000); return () => clearInterval(t); }, []);
+  useCountUp(numRef);
+
+  const inCat = c => P.filter(p => p.cat === c);
+  const lowest = c => { const ps = inCat(c); return ps.length ? Math.min(...ps.map(p => p.price)) : 0; };
+  const bestDeal = c => [...inCat(c)].sort((a, b) => off(b) - off(a))[0];
+  const maxOff = c => Math.max(0, ...(c ? inCat(c) : P).map(off));
+  const deals = [...P].sort((a, b) => off(b) - off(a)).slice(0, 5);
+  const emiPs = P.filter(p => p.emi), emiFrom = emiPs.length ? Math.round(Math.min(...emiPs.map(p => p.price)) / 9) : 0;
+  const feats = c => (TOP_FEATURES[c] || []).slice(0, 2);
+  const sizeOf = c => Object.hasOwn(CAT_SIZE, c) ? CAT_SIZE[c] : null;
+  const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
+
+  const onHero = e => {
+    if (e.target.dataset.i) show(+e.target.dataset.i);
+    else if (e.target.classList.contains("prev")) show(cur - 1);
+    else if (e.target.classList.contains("next")) show(cur + 1);
+  };
+  // the banner photo drifts a little toward the pointer
+  const onMove = e => { const h = heroRef.current, r = h.getBoundingClientRect(); h.style.setProperty("--px", ((e.clientX - r.left) / r.width - .5).toFixed(3)); h.style.setProperty("--py", ((e.clientY - r.top) / r.height - .5).toFixed(3)); };
+
+  const nums = [
+    [maxOff(), "%", "Up to", "off on festive deals"],
+    [9, "", "Months No Cost EMI", "no extra interest on bank cards"],
+    [BANK_OFFERS.length, "", "Bank offers", BANK_OFFERS.map(b => b[0].split(" ")[0]).join(", ")],
+    [100, "%", "Genuine", "brand warranty on everything"],
+  ];
+  return <>
+    <div className="hero" ref={heroRef} onClick={onHero} onPointerMove={onMove}>
+      {SLIDES.map((sl, i) => { const spot = bestDeal(sl.c); return <div className={"slide" + (i === cur ? " on" : "")} key={sl.c}>
+        <div className="bg" style={{ backgroundImage: `url(img/${sl.im}.jpg)` }}></div><span className="eyebrow">{sl.c}</span>
+        <h1>{sl.h.map((l, j) => <span className="ln" key={j}>{l.split(" ").map((w, k) => <span className="w" style={{ "--i": j * 3 + k }} key={k}>{w}&nbsp;</span>)}</span>)}</h1>
+        <p>{sl.s}</p>
+        <div className="hcta"><a className="btn" href={catUrl(sl.c)}>Shop now</a><a className="btn ghost" href={listUrl({ cat: sl.c, sort: "off" })}>See deals</a></div>
+        {spot && <a className="spot" href={"product.html?id=" + spot.id}><img src={spot.img} alt="" loading={i ? "lazy" : "eager"} /><span><small>{spot.brand}</small><b>{spot.name}</b><i>{money(spot.price)}{off(spot) > 0 && <em>{off(spot)}% off</em>}</i></span></a>}
+      </div>; })}
+      <button className="arrow prev" aria-label="Previous slide">‹</button><button className="arrow next" aria-label="Next slide">›</button>
+      <div className="dots">{SLIDES.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>
+    </div>
+    <div className="num" ref={numRef}>{nums.map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
+
+    <section><h2>Shop by Category</h2><div className="kcats">{CATS.map(c => { const ps = inCat(c), low = lowest(c);
+      return <a className="kcat" href={catUrl(c)} key={c} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><div className="kshade"></div>
+        <div className="ktext"><b>{c}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"} · from {money(low)}</small><u>Shop now →</u></div></a>; })}</div></section>
+
+    <section><h2>Shop by size</h2><div className="sizerows">{CATS.map(c => { const { S, all, sizeOf: sz } = catSizes(P, c); if (!S || !all.length) return null;
+      const from = s => Math.min(...inCat(c).filter(p => (sz(p) || {}).n === s.n).map(p => p.price));
+      return <div className="sizerow" key={c}><b>{c}<small>by {S.by.toLowerCase()}</small></b>
+        {[...all].sort((a, b) => a.n - b.n).map(s => <a className="chip sw" href={listUrl({ cat: c, size: s.label })} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>from {money(from(s))}</small></a>)}
+        {GUIDES[c] && <a className="alink" href={catUrl(c) + "#guide"}>Not sure? Open the {GUIDES[c].nav} →</a>}</div>; })}</div></section>
+
+    <section><h2>Built for your home</h2><div className="bento">
+      {CATS.map((c, i) => { const f = feats(c), S = sizeOf(c); return <a className={"bt ph" + (i === 0 ? " big" : "")} href={catUrl(c)} key={c}>
+        <img src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><span className="kicker">{c}</span>
+        {i === 0 ? <><h3>{f.map(x => x[1]).join(" · ")}</h3>{f[0] && <p>{f[0][2]}. {f[1] ? f[1][2] + "." : ""}</p>}</> : <><h3>{f[0] ? f[0][1] : c}</h3>{f[1] && <p>{f[1][1]}</p>}</>}
+        <u>Shop {S ? S.short : c} →</u></a>; })}
+      {emiFrom > 0 && <a className="bt glass" href="offers.html" style={{ gridColumn: "span 2" }}><span className="kicker">No Cost EMI</span><h3>From {money(emiFrom)}/month</h3><p>3, 6 or 9 instalments on participating bank credit cards, no extra interest.</p><u>See bank offers →</u></a>}
+    </div></section>
+
+    <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><div className="grid">{deals.map(p => <Card p={p} key={p.id} />)}</div></section>
+
+    {CATS.map(c => { const S = sizeOf(c), list = inCat(c); return list.length ? <section className="cblock" key={c}>
+      <a className="cban" href={catUrl(c)}><img className="cph" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><div><span className="kicker">{c}</span><h2>{S ? S.note : c}</h2>
+        <p>From {money(lowest(c))} · up to {maxOff(c)}% off · {list.length} model{list.length === 1 ? "" : "s"}</p><u>Explore {S ? S.short : c} →</u></div></a>
+      <div className="grid cgrid">{list.slice(0, 4).map(p => <Card p={p} key={p.id} />)}{list.length < 4 && <a className="morecard" href={catUrl(c)} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><span className="kicker">{c}</span><b>See all {S ? S.short : c}</b><small>All {list.length} models with filters and size tabs</small><u>View all →</u></a>}</div>
+    </section> : null; })}
+
+    <section><h2>Shop by Brand</h2><div className="brands">{BRANDS.map(b => { const ps = P.filter(p => p.brand === b); return <a className="brand" href={brandUrl(b)} key={b}><b>{b}</b><span>{ps.length} products</span><u>Explore →</u><span className="pstack">{ps.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a>; })}</div></section>
+    {quotes.length > 0 && <section><h2>What customers say</h2><div className="quotes">{quotes.map((r, i) => <a className="quote" href={"product.html?id=" + r.p.id} key={i}>
+      <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
+    <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
+    <BankOffers />
+    <section><a className="wide" href="offers.html" style={{ backgroundImage: "linear-gradient(120deg,#1a0b2e,#0b3d2e 40%,#15181e 70%,#1a0b2e)", backgroundSize: "260% 100%" }}><b>Festive offers are live</b><span>Up to {maxOff()}% off, bank offers and No Cost EMI</span><u>See all offers →</u><span className="pstack">{deals.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a></section>
+    <section><h2>Why Mytekkstore?</h2><div className="why">
+      <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
+      <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
+      <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
+      <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
+    </div></section>
+    <section className="faq"><h2>Good to know</h2><div className="faqs">{FAQ.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div></section>
+  </>;
+}
