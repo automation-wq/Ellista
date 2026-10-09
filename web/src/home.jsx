@@ -66,17 +66,17 @@ export function Home() {
     </div>
     <div className="num" ref={numRef}>{nums.map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
 
-    <section><h2>Shop by Category</h2><div className="kcats">{CATS.map(c => { const ps = inCat(c), low = lowest(c);
+    <section><h2>Shop by Category</h2><p className="lead">Every category we carry. Pick one and see each model, size by size.</p><div className="kcats">{CATS.map(c => { const ps = inCat(c), low = lowest(c);
       return <a className="kcat" href={catUrl(c)} key={c} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><div className="kshade"></div>
         <div className="ktext"><b>{c}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"} · from {money(low)}</small><u>Shop now →</u></div></a>; })}</div></section>
 
-    <section><h2>Shop by size</h2><div className="sizerows">{CATS.map(c => { const { S, all, sizeOf: sz } = catSizes(P, c); if (!S || !all.length) return null;
+    <section><h2>Shop by size</h2><p className="lead">Start with the size that fits your room, then choose the model.</p><div className="sizerows">{CATS.map(c => { const { S, all, sizeOf: sz } = catSizes(P, c); if (!S || !all.length) return null;
       const from = s => Math.min(...inCat(c).filter(p => (sz(p) || {}).n === s.n).map(p => p.price));
       return <div className="sizerow" key={c}><b>{c}<small>by {S.by.toLowerCase()}</small></b>
         {[...all].sort((a, b) => a.n - b.n).map(s => <a className="chip sw" href={listUrl({ cat: c, size: s.label })} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>from {money(from(s))}</small></a>)}
         {GUIDES[c] && <a className="alink" href={catUrl(c) + "#guide"}>Not sure? Open the {GUIDES[c].nav} →</a>}</div>; })}</div></section>
 
-    <section><h2>Built for your home</h2><div className="bento">
+    <section><h2>Built for your home</h2><p className="lead">The features that matter most in each category, in plain words.</p><div className="bento">
       {CATS.map((c, i) => { const f = feats(c), S = sizeOf(c); return <a className={"bt ph" + (i === 0 ? " big" : "")} href={catUrl(c)} key={c}>
         <img src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><span className="kicker">{c}</span>
         {i === 0 ? <><h3>{f.map(x => x[1]).join(" · ")}</h3>{f[0] && <p>{f[0][2]}. {f[1] ? f[1][2] + "." : ""}</p>}</> : <><h3>{f[0] ? f[0][1] : c}</h3>{f[1] && <p>{f[1][1]}</p>}</>}
@@ -84,7 +84,7 @@ export function Home() {
       {emiFrom > 0 && <a className="bt glass" href="offers.html" style={{ gridColumn: "span 2" }}><span className="kicker">No Cost EMI</span><h3>From {money(emiFrom)}/month</h3><p>3, 6 or 9 instalments on participating bank credit cards, no extra interest.</p><u>See bank offers →</u></a>}
     </div></section>
 
-    <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
+    <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><p className="lead">The biggest discounts across the store right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
     {CATS.map(c => { const S = sizeOf(c), list = inCat(c); return list.length ? <section className="cblock" key={c}>
       <a className="cban" href={catUrl(c)}><img className="cph" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><div><span className="kicker">{c}</span><h2>{S ? S.note : c}</h2>
@@ -92,18 +92,18 @@ export function Home() {
       <div className="grid cgrid">{list.slice(0, 4).map((p, i) => <Card p={p} i={i} key={p.id} />)}{list.length < 4 && <a className="morecard" href={catUrl(c)} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><span className="kicker">{c}</span><b>See all {S ? S.short : c}</b><small>All {list.length} models with filters and size tabs</small><u>View all →</u></a>}</div>
     </section> : null; })}
 
-    <section><h2>Shop by Brand</h2><div className="brands">{BRANDS.map(b => { const ps = P.filter(p => p.brand === b); return <a className="brand" href={brandUrl(b)} key={b}><b>{b}</b><span>{ps.length} products</span><u>Explore →</u><span className="pstack">{ps.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a>; })}</div></section>
-    {quotes.length > 0 && <section><h2>What customers say</h2><div className="quotes">{quotes.map((r, i) => <a className="quote" href={"product.html?id=" + r.p.id} key={i}>
+    <section><h2>Shop by Brand</h2><p className="lead">{BRANDS.join(" and ")}, side by side.</p><div className="brands">{BRANDS.map(b => { const ps = P.filter(p => p.brand === b); return <a className="brand" href={brandUrl(b)} key={b}><b>{b}</b><span>{ps.length} products</span><u>Explore →</u><span className="pstack">{ps.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a>; })}</div></section>
+    {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews from across the catalogue.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={"product.html?id=" + r.p.id} key={i}>
       <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
     <Row title="Recently viewed" href="" list={recent.map(byId).filter(Boolean)} />
     <BankOffers />
     <section><a className="wide" href="offers.html" style={{ backgroundImage: "linear-gradient(120deg,#1a0b2e,#0b3d2e 40%,#15181e 70%,#1a0b2e)", backgroundSize: "260% 100%" }}><b>Festive offers are live</b><span>Up to {maxOff()}% off, bank offers and No Cost EMI</span><u>See all offers →</u><span className="pstack">{deals.slice(0, 3).map(p => <img src={p.img} alt="" loading="lazy" key={p.id} />)}</span></a></section>
-    <section><h2>Why Mytekkstore?</h2><div className="why">
+    <section><h2>Why Mytekkstore?</h2><p className="lead">What comes with every order.</p><div className="why">
       <div><Ico shapes={DRAW_ICONS.truck} /><b>Fast delivery</b><p>Doorstep delivery across the country.</p></div>
       <div><Ico shapes={DRAW_ICONS.shield} /><b>Genuine products</b><p>Brand warranty on everything we sell.</p></div>
       <div><Ico shapes={DRAW_ICONS.cash} /><b>Cash on delivery</b><p>Pay when your order arrives.</p></div>
       <div><Ico shapes={DRAW_ICONS.box} /><b>Order tracking</b><p>Follow every order from your account.</p></div>
     </div></section>
-    <section className="faq"><h2>Good to know</h2><div className="faqs">{FAQ.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div></section>
+    <section className="faq"><h2>Good to know</h2><p className="lead">Short answers before you order.</p><div className="faqs">{FAQ.map(([q, a, link]) => <details key={q}><summary>{q}</summary><p>{a}{link && <> <a className="alink" href={link[0]}>{link[1]} →</a></>}</p></details>)}</div></section>
   </>;
 }

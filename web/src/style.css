@@ -1043,3 +1043,63 @@ a:hover > .pstack img:nth-child(1) { translate:40px 14px; rotate:-13deg } a:hove
 .faqs details p { padding:0 0 14px; color:var(--soft); font-size:14px; line-height:1.55 }
 .specs .grp th { width:auto; padding-top:20px; color:var(--text); font-weight:700; font-size:12px; letter-spacing:2px; text-transform:uppercase; border-bottom-color:var(--text) }
 @media (max-width:760px) { .faqs { grid-template-columns:1fr } .sizerow > b { min-width:100% } .sizerow .alink { margin-left:0 } }
+
+/* ===== Premium pass (2026-10-09, client asked for an Apple-like feel): bigger, calmer type; much more air between sections; pill
+   buttons; softer, rounder cards; a sub-line under every home headline. Appended last on purpose so it wins over the rules above. ===== */
+body { font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased }
+.wrap { max-width:1240px; padding:0 22px }
+main > section, main > .fest, main > .cols { margin-top:clamp(64px,9vw,120px) }
+main > .num { margin-top:28px }
+.hero { margin-top:28px; height:clamp(460px,54vw,620px); border-radius:28px }
+.slide { padding:clamp(28px,5vw,72px) clamp(24px,5vw,80px) }
+.slide h1 { font-size:clamp(36px,6.2vw,76px); letter-spacing:-2.4px; line-height:1.02 }
+.slide p { font-size:clamp(16px,1.6vw,21px); margin:18px 0 30px; max-width:520px }
+.eyebrow { font-size:12.5px; letter-spacing:2.4px }
+main h1 { letter-spacing:-.9px }
+main h2 { font-size:clamp(30px,3.8vw,46px); letter-spacing:-1.5px; line-height:1.06; font-weight:700; padding-bottom:16px; margin-bottom:12px }
+main h2 a { font-size:15px; font-weight:500 }
+main h2::after { width:64px; height:3px }
+.lead { color:var(--muted); font-size:clamp(16px,1.35vw,19px); line-height:1.5; max-width:640px; margin:0 0 30px; letter-spacing:-.1px }
+.btn { border-radius:999px; padding:12px 28px; font-size:15px; letter-spacing:-.1px }
+.btn.ghost { border-radius:999px }
+.card { border-radius:24px; padding:16px; gap:9px }
+.card .img { border-radius:18px }
+.card h3 { font-size:16px; letter-spacing:-.2px; line-height:1.35 }
+.card .price b { font-size:21px; letter-spacing:-.5px }
+.num div { border-radius:22px; padding:24px 26px 24px 30px }
+.num b { font-size:clamp(30px,3.4vw,44px); letter-spacing:-1.6px }
+.num span { font-size:15px }
+.kcat { height:clamp(230px,24vw,300px); border-radius:26px }
+.ktext b { font-size:clamp(22px,2.2vw,30px); letter-spacing:-.6px }
+.sizerows { gap:14px }
+.sizerow { padding:22px 26px; border-radius:22px; gap:12px }
+.sizerow > b { font-size:18px; letter-spacing:-.3px; min-width:200px } .sizerow > b small { font-size:13px }
+.sizerow .chip.sw { padding:12px 18px; border-radius:16px } .sizerow .chip.sw b { font-size:15px } .sizerow .chip.sw small { font-size:12.5px }
+.sizerow .alink { font-size:14px; font-weight:500 }
+.bento { grid-auto-rows:240px; gap:16px }
+.bt { border-radius:26px; padding:26px }
+.bt h3 { font-size:clamp(20px,2vw,27px); letter-spacing:-.6px }
+.cban { border-radius:28px; min-height:360px }
+.cblock { gap:16px }
+.brands .brand { height:230px; border-radius:26px }
+.quotes { gap:18px } .quote { padding:28px; border-radius:24px } .quote p { font-size:17px; line-height:1.55; letter-spacing:-.1px }
+.offer { border-radius:22px; padding:26px } .offer b { font-size:24px; letter-spacing:-.5px }
+.wide { border-radius:28px; padding:48px }
+.why { gap:18px } .why div { padding:32px 28px; border-radius:24px } .why b { font-size:19px; letter-spacing:-.3px; margin-bottom:6px } .why p { font-size:15px; line-height:1.55 }
+.ico { width:52px; height:52px; border-radius:16px; margin-bottom:16px } .ico svg { width:28px; height:28px }
+.faqs { gap:12px 24px } .faqs details { border-radius:18px; padding:8px 22px } .faqs summary { font-size:16.5px; padding:16px 0; letter-spacing:-.2px } .faqs details p { font-size:15px; padding-bottom:18px }
+.ftrust { font-size:14px }
+footer { margin-top:clamp(80px,10vw,140px); padding:64px 0 32px; font-size:14px }
+.box { border-radius:24px; padding:56px 36px }
+.crumbs { margin-top:22px }
+@media (max-width:760px) {
+  body { font-size:15.5px }
+  main > section, main > .fest, main > .cols { margin-top:56px }
+  .hero { height:460px; border-radius:22px; margin-top:16px }
+  .slide h1 { font-size:clamp(34px,10vw,46px); letter-spacing:-1.6px }
+  main h2 { font-size:clamp(27px,8vw,32px); letter-spacing:-1px }
+  .lead { font-size:15.5px; margin-bottom:20px }
+  .sizerow { padding:18px } .sizerow > b { min-width:100% }
+  .bento { grid-auto-rows:210px }
+  .why div { padding:24px 22px }
+}
