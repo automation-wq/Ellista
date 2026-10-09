@@ -1103,3 +1103,9 @@ footer { margin-top:clamp(80px,10vw,140px); padding:64px 0 32px; font-size:14px 
   .bento { grid-auto-rows:210px }
   .why div { padding:24px 22px }
 }
+
+/* category pages (2026-10-09): explainer icon tiles and the compare table */
+.kico { display:grid; place-items:center; width:52px; height:52px; border-radius:16px; background:#08805f14; color:var(--accent); margin-bottom:16px; transition:background .25s, color .25s, scale .25s } .kico svg { width:26px; height:26px }
+.why div:hover .kico { background:var(--accent); color:#fff; scale:1.08 }
+.cmp .lead { margin-bottom:22px }
+.ctable thead th a { display:grid; gap:4px } .ctable thead th b { font-size:14px; line-height:1.3 }

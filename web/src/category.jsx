@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { useStore } from "./store.jsx";
 import { qs } from "./api.js";
-import { Card, Box, Icon } from "./components.jsx";
-import { TOP_FEATURES, GUIDES, CAT_CLIPS, KV_IMG, catSizes, catUrl, listUrl, off, avg } from "./data.js";
+import { Card, Box, Icon, Photo, Stars, Buy, BankOffers } from "./components.jsx";
+import { TOP_FEATURES, GUIDES, CAT_CLIPS, KV_IMG, CAT_SIZE, CAT_KNOW, CAT_FAQ, catSizes, catUrl, listUrl, off, avg, starRow } from "./data.js";
 
 const BANDS = [[0, 10000, "Under ₹10,000"], [10000, 25000, "₹10,000 to ₹25,000"], [25000, 50000, "₹25,000 to ₹50,000"], [50000, 0, "Above ₹50,000"]]; // [min, max, label]
 const OFFS = [10, 20, 30];
@@ -91,18 +91,53 @@ export function Category() {
       {n ? <div className="grid">{list.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div> : wishOnly ? <Box title="Your wishlist is empty" text="Tap the heart on any product to save it here." href="category.html" cta="Browse products" />
         : <div className="box"><h1>No products found</h1><p>Try a different size, search or filter.</p>{chips.length ? <button type="button" className="btn" onClick={clear}>Clear filters</button> : <a className="btn" href="category.html">See all products</a>}</div>}
     </div>
-    {!wishOnly && <CategoryExtras cat={cat} sizes={sizeList} sizeUrl={s => url({ size: s })} />}
+    {!wishOnly && <CategoryExtras cat={cat} list={catAll} sizes={sizeList} sizeUrl={s => url({ size: s })} />}
   </>;
 }
 
-// "Top features" at the end of every category page, plus the interactive size guide on the TV page
-function CategoryExtras({ cat, sizes, sizeUrl }) {
-  const feats = Object.hasOwn(TOP_FEATURES, cat) ? TOP_FEATURES[cat] : null, g = Object.hasOwn(GUIDES, cat) ? GUIDES[cat] : null; // cat comes from the address
+// The rest of a category page, so it reads like a brand page and not a bare list: every model side by side, the Top features band,
+// "Know before you buy" explainers, the TV size guide, a deals banner, the newest reviews, bank offers and the category's questions.
+// Everything with numbers or model facts is computed from the catalogue (list = every product in the category, unfiltered).
+function CategoryExtras({ cat, list, sizes, sizeUrl }) {
+  const { money } = useStore();
+  const has = (o, k) => Object.hasOwn(o, k); // cat comes from the address
+  const feats = has(TOP_FEATURES, cat) ? TOP_FEATURES[cat] : null, g = has(GUIDES, cat) ? GUIDES[cat] : null, know = has(CAT_KNOW, cat) ? CAT_KNOW[cat] : null, faq = has(CAT_FAQ, cat) ? CAT_FAQ[cat] : null;
+  const S = has(CAT_SIZE, cat) ? CAT_SIZE[cat] : null, short = S ? S.short : cat, rich = !!cat && list.length > 0;
+  const quotes = list.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 4);
+  const low = rich ? Math.min(...list.map(p => p.price)) : 0, maxOff = rich ? Math.max(0, ...list.map(off)) : 0;
   return <>
+    {rich && list.length > 1 && <CompareAll list={list} cat={cat} short={short} />}
     {feats && <section className="topf" id="features">{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<p className="kicker">Top features</p><h2>{g ? g.featTitle : "What makes these " + cat.toLowerCase() + " stand out"}</h2>
       <div className="tfgrid">{feats.map(([icon, title, text]) => <div className="tf" key={title}><i><Icon k={icon} /></i><b>{title}</b><span>{text}</span></div>)}</div></section>}
+    {know && <section id="know"><h2>Know before you buy</h2><p className="lead">{short} explained in plain words, so you can choose with confidence.</p>
+      <div className="why">{know.map(([icon, title, text]) => <div key={title}><i className="kico"><Icon k={icon} /></i><b>{title}</b><p>{text}</p></div>)}</div></section>}
     {g && sizes.length > 0 && <Guide g={g} sizes={sizes} sizeUrl={sizeUrl} />}
+    {rich && maxOff > 0 && <section><a className="cban" href={listUrl({ cat, sort: "off" })}><img className="cph" src={`img/${KV_IMG[cat] || "kv-tv"}.jpg`} alt="" loading="lazy" /><div><span className="kicker">Deals on {short}</span><h2>Up to {maxOff}% off</h2>
+      <p>{list.length} model{list.length === 1 ? "" : "s"} from {money(low)}{list.every(p => p.emi) ? " · No Cost EMI on every model" : ""} · free delivery · cash on delivery</p><u>See the deals →</u></div></a></section>}
+    {quotes.length > 0 && <section><h2>What customers say</h2><p className="lead">The newest reviews on {short.toLowerCase()}.</p><div className="quotes">{quotes.map((r, i) => <a className="quote" href={"product.html?id=" + r.p.id} key={i}>
+      <div className="stars"><span>{starRow(r.rating)}</span></div><p>“{r.text}”</p><b>{r.name}</b><small>{r.p.brand} {r.p.name}</small></a>)}</div></section>}
+    {rich && <BankOffers />}
+    {faq && <section className="faq"><h2>Good to know</h2><p className="lead">Short answers about {short.toLowerCase()}.</p><div className="faqs">{faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div></section>}
   </>;
+}
+// every model in the category side by side (up to four): price, rating, each specification, No Cost EMI, add to cart
+function CompareAll({ list, cat, short }) {
+  const { money } = useStore();
+  const cols = list.slice(0, 4), cheapest = Math.min(...cols.map(x => x.price));
+  const keys = [...new Set(cols.flatMap(x => (x.specs || []).map(([k]) => k)))];
+  const specOf = (x, k) => ((x.specs || []).find(([n]) => n === k) || [])[1] || "—";
+  const line = (label, f, cls) => <tr className={cls || undefined} key={label}><th>{label}</th>{cols.map(x => <td key={x.id}>{f(x)}</td>)}</tr>;
+  return <section className="cmp" id="compare"><h2>Compare the models</h2>
+    <p className="lead">{cols.length === list.length ? "Every " + cat.toLowerCase().replace(/s$/, "") + " we stock" : "Four of our " + short.toLowerCase()}, side by side. Rows marked with a dot are where they differ.</p>
+    <div className="scroll"><table className="ctable">
+      <thead><tr><th></th>{cols.map(x => <th key={x.id}><a href={"product.html?id=" + x.id}><span className="cimg"><Photo p={x} /></span><small>{x.brand}</small><b>{x.name}</b></a></th>)}</tr></thead>
+      <tbody>
+        {line("Price", x => <><b className="cprice">{money(x.price)}</b>{x.mrp > x.price && <><s>{money(x.mrp)}</s><span className="badge">{off(x)}% off</span></>}{x.price === cheapest && <><br /><span className="stock">Lowest price</span></>}</>)}
+        {line("Rating", x => x.reviews && x.reviews.length ? <Stars p={x} /> : <span className="muted">No reviews yet</span>)}
+        {keys.map(k => line(k, x => specOf(x, k), new Set(cols.map(x => specOf(x, k))).size > 1 ? "diff" : ""))}
+        {line("No Cost EMI", x => x.emi ? <><Icon k="check" /> Available</> : "—")}
+        {line("", x => <Buy p={x} />)}
+      </tbody></table></div></section>;
 }
 function Guide({ g, sizes, sizeUrl }) {
   const [v, setV] = useState(g.value);

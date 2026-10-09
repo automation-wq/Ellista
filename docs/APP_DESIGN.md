@@ -130,6 +130,10 @@ Rules for generated images: no brand logos or brand names inside the image, same
 
 The client asked for an Apple-like feel. One block at the end of `web/src/style.css` (marked "Premium pass") raises the whole scale: 16px body copy, section headlines of 30 to 46px with tight letter-spacing and a sub-line (`.lead`) under every home headline, 64 to 120px of air between sections, pill buttons (999px), cards and tiles at 22 to 28px radius, a hero up to 620px tall with a 76px headline, bigger numbers band, size chips, quotes, offers and FAQ rows. The sub-lines in `home.jsx` only describe what the data under them shows. Section and card reveals rise 10px (was 16 and 14) so they feel calm; the browser test helper waits 250 ms after scrolling for that motion to settle.
 
+### Category pages (2026-10-09)
+
+The client found a category with two products "boring" (reference: palmo.co.in, a brand site that tells a story under the product grid). Every category page now continues after the grid with: **Compare the models** (up to four products side by side: price, rating, each specification, No Cost EMI, add to cart, computed from the catalogue), the **Top features** band, **Know before you buy** (four explainer cards per category from `CAT_KNOW` in `data.js`: general, factual copy; nothing about a specific model), the TV size guide (TVs only), a **deals banner** (biggest discount, model count and lowest price from the catalogue), **What customers say** (newest reviews in that category), **Bank offers**, and **Good to know** (four questions per category from `CAT_FAQ`). Brand, search and wishlist lists keep the plain grid. When real products arrive, re-read `CAT_KNOW` and `CAT_FAQ` once; the numbers there (room sizes, capacities, viewing distance) are general guidance, not model claims.
+
 ## 8. Motion
 
 Everything here switches off when the device asks for reduced motion.

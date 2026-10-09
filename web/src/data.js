@@ -162,3 +162,46 @@ export const eta = (from = Date.now()) => [day(from, 3), day(from, 5)];
 export const etaText = from => eta(from).join(" to ");
 // No Cost EMI: the price split over 3, 6 and 9 months with no interest, as [months, per month]
 export const emiPlans = price => [3, 6, 9].map(n => [n, Math.ceil(price / n)]);
+
+// Category pages: "Know before you buy" cards and the questions under them. General, factual copy only; what a particular model has
+// comes from the compare table, which reads the catalogue. [icon from ICONS, title, text]
+export const CAT_KNOW = {
+  "Air Conditioners": [
+    ["room", "Tonnage is cooling capacity", "A ton is how much heat the AC removes in an hour. 1 Ton suits a room up to about 120 sq ft, 1.5 Ton up to about 180 sq ft. Sunny rooms and top floors need the bigger size."],
+    ["gear", "Inverter compressor", "Instead of switching on and off, the compressor speeds up and slows down to hold the temperature. That uses less electricity and keeps the room steadier."],
+    ["star", "Star ratings", "ACs are rated from 1 to 5 Star for energy use. More stars means less electricity for the same cooling, so a 5 Star model costs less to run every summer."],
+    ["medal", "Copper condenser", "Copper moves heat faster than aluminium, resists corrosion and is easier to repair, so the AC keeps cooling well for longer."],
+  ],
+  "Washing Machines": [
+    ["basket", "Capacity in kg", "The weight of dry clothes per wash. 6 to 7 kg suits two or three people; 8 kg and above handles a family's bedding and towels in one load."],
+    ["spin", "Front load, top load or semi automatic", "Front load machines are gentle on clothes and use the least water. Top load machines are easy to fill. Semi automatic machines cost the least: you move the clothes from the wash tub to the spin tub."],
+    ["wind", "Spin speed", "Measured in RPM. A faster spin wrings more water out, so clothes dry sooner on the line."],
+    ["bolt", "Star ratings", "A 5 Star rating means the machine uses the least electricity and water for each wash."],
+  ],
+  "Televisions": [
+    ["ruler", "Screen size", "Measure the distance from your sofa to the wall. Divide that distance in inches by 1.2 for a cinema-like fit, or use the size guide on this page."],
+    ["tv", "HD Ready, Full HD or 4K", "4K Ultra HD has four times the pixels of Full HD, so the picture stays sharp on 43 inch and bigger screens. HD Ready suits a small bedroom TV."],
+    ["apps", "Smart TV and Google TV", "A smart TV streams apps without a set-top box. Google TV adds a voice remote and recommendations across your apps."],
+    ["plug", "Ports", "Count what you plug in: a set-top box, a console and a soundbar each need an HDMI port. More ports means fewer cable swaps."],
+  ],
+};
+export const CAT_FAQ = {
+  "Air Conditioners": [
+    ["Which size do I need?", "1 Ton cools a room up to about 120 sq ft and 1.5 Ton up to about 180 sq ft. For a room that gets direct sun, choose the bigger size."],
+    ["What does inverter mean?", "The compressor varies its speed instead of switching on and off, so the AC uses less electricity and the temperature stays steady."],
+    ["Is a 5 Star AC worth it?", "It uses less electricity than a 3 Star AC for the same cooling, so it costs less to run. The longer you run the AC each day, the sooner the saving covers the higher price."],
+    ["Why does the condenser material matter?", "Copper condensers cool faster, last longer and are easier to repair than aluminium ones."],
+  ],
+  "Washing Machines": [
+    ["Front load or top load?", "Front load is gentler on clothes and uses less water. Top load is easier to fill and usually costs less."],
+    ["What does semi automatic mean?", "The machine has two tubs. You wash in one, then move the clothes to the other to spin. It is the lowest-priced type."],
+    ["What capacity is right for my family?", "6 to 7 kg for two or three people, 8 kg or more for a larger family or for washing bedding in one load."],
+    ["Does a higher spin speed matter?", "A faster spin leaves clothes drier, so they take less time on the line."],
+  ],
+  "Televisions": [
+    ["Which size is right for my room?", "Measure how far you sit from the screen and use the TV size guide on this page."],
+    ["Is 4K worth it?", "On a 43 inch or bigger screen, yes: four times the detail of Full HD, and streaming apps carry 4K content. For a small bedroom TV, HD Ready is enough."],
+    ["What is Google TV?", "A smart TV system with a voice remote and recommendations across your apps."],
+    ["How many HDMI ports do I need?", "One for each device you plug in: set-top box, console, soundbar."],
+  ],
+};
