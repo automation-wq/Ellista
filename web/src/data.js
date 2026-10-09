@@ -4,15 +4,12 @@
 export const COUNTRIES = { India: ["₹", "en-IN", 1], UAE: ["AED ", "en-AE", 0.044], USA: ["$", "en-US", 0.012] };
 // bullets under the description on every product page; the real details come from each product's own specifications
 export const DEFAULT_FEATURES = ["Genuine product with brand warranty", "Quality checked before dispatch", "Cash on delivery available"];
-export const INFO = {
-  about: ["About Mytekkstore", "<p>Mytekkstore is a multi-category, multi-brand electronics store.</p><p class='muted'>[Sample text — client to provide the company story.]</p>"],
-  contact: ["Contact Us", "<p>We are happy to help with orders, delivery and service.</p><ul><li>Phone: [client to provide]</li><li>Email: [client to provide]</li><li>Hours: [client to provide]</li></ul>"],
-  stores: ["Store Locator", "<p class='muted'>[Sample text — client to provide the list of store addresses.]</p>"],
-  shipping: ["Shipping and Delivery", "<p class='muted'>[Sample text — client to provide delivery areas, charges and timelines.]</p>"],
-  returns: ["Returns and Refunds", "<p class='muted'>[Sample text — client to provide the returns policy.]</p>"],
-  terms: ["Terms of Use", "<p class='muted'>[Sample text — client to provide terms of use.]</p>"],
-  privacy: ["Privacy Policy", "<p class='muted'>[Sample text — client to provide privacy policy.]</p>"],
-};
+// Info pages (web/src/info.jsx). Fill these in and they appear on the Contact and Store locator pages; empty = not shown.
+export const CONTACT = { phone: "", email: "", hours: "", address: "" };
+// [{ name, address, hours, map }] — the store list for the Store locator page
+export const STORES = [];
+// Policy figures used on the Shipping, Returns and Terms pages. DRAFT: the client confirms these before launch (README, "Before launch").
+export const POLICY = { returnDays: 7, refundDays: 7 };
 // "Good to know" on the home page. Every answer only repeats a promise the site already makes elsewhere: [question, answer, [link, label] or null]
 export const FAQ = [
   ["Is delivery free?", "Yes. Every order is delivered free, usually within 3 to 5 days. Enter your pincode on any product page to check your area.", null],

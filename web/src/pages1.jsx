@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useStore } from "./store.jsx";
 import { api, qs, demoPay, track } from "./api.js";
 import { Card, Row, Strip, Box, Line, OrderItems, BankOffers, Form, Ico, Icon } from "./components.jsx";
-import { DRAW_ICONS, INFO, STEPS, FESTIVE, KV_IMG, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
+import { DRAW_ICONS, STEPS, FESTIVE, KV_IMG, catUrl, brandUrl, listUrl, off, etaText } from "./data.js";
 import { reveal } from "./motion.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -36,7 +36,8 @@ export function Offers() {
 export function Cart() {
   const { P, cart, byId, money, cartCount, cartTotal } = useStore();
   useEffect(() => { document.title = "Cart | Mytekkstore"; }, []);
-  if (!cartCount()) return <Box title="Your cart is empty" text="Add something you like and it will show up here." href="index.html" cta="Continue shopping" />;
+  if (!cartCount()) return <><Box title="Your cart is empty" text="Add something you like and it will show up here." href="index.html" cta="Continue shopping" />
+    <Row title="Deals of the Day" href="category.html?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} /></>;
   return <>
     <h1 style={{ margin: "24px 0 16px" }}>Your Cart ({cartCount()})</h1>
     <div className="cols">
@@ -123,12 +124,10 @@ export function Order() {
   </>;
 }
 
-export function InfoPage() {
-  const [title, html] = (Object.hasOwn(INFO, qs.get("p")) && INFO[qs.get("p")]) || ["Page not found", "<p>This page does not exist.</p>"];
-  useEffect(() => { document.title = title + " | Mytekkstore"; }, []);
-  return <><div className="crumbs"><a href="index.html">Home</a> › {title}</div><div className="prose"><h1>{title}</h1><div dangerouslySetInnerHTML={{ __html: html }} /></div></>;
-}
+export { InfoPage } from "./info.jsx";
 export function NotFound() {
+  const { P } = useStore();
   useEffect(() => { document.title = "Page not found | Mytekkstore"; }, []);
-  return <Box title="Page not found" text="The address may be wrong, or the page has moved." href="index.html" cta="Back to home" />;
+  return <><Box title="Page not found" text="The address may be wrong, or the page has moved." href="index.html" cta="Back to home" />
+    <Row title="Deals of the Day" href="category.html?sort=off" list={[...P].sort((a, b) => off(b) - off(a)).slice(0, 5)} /></>;
 }

@@ -1247,3 +1247,24 @@ main h2 { font-size:clamp(28px,3.4vw,42px); letter-spacing:-1.5px }
 .kcat { height:clamp(220px,22vw,280px) }
 .cban { min-height:320px }
 @media (max-width:760px) { .hero { height:min(64vh,520px) } .slide h1 { font-size:clamp(32px,9vw,42px) } main h2 { font-size:clamp(26px,7.5vw,30px) } }
+
+/* info pages (2026-10-09): opener, policy sections, contact layout, return steps, store cards */
+.pagehero { margin-top:22px; min-height:clamp(300px,34vw,440px) }
+.pagehero .explore { font-size:clamp(30px,4.6vw,56px); letter-spacing:-1.8px; max-width:12ch }
+.policy { display:grid; gap:0; max-width:900px }
+.policy > section { display:grid; grid-template-columns:64px 1fr; gap:16px; padding:26px 0; border-top:1px solid var(--line); margin:0 }
+.policy > section:last-child { border-bottom:1px solid var(--line) }
+.pnum { font-family:Manrope,Inter,system-ui,sans-serif; font-weight:800; font-size:14px; letter-spacing:1px; color:var(--accent); padding-top:6px }
+.policy h3 { font-size:20px; letter-spacing:-.4px; margin-bottom:6px } .policy p { color:var(--soft); font-size:16px; line-height:1.6; margin-top:6px; max-width:680px }
+.contact { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:28px; align-items:start }
+.cform { max-width:none; background:var(--card); border-radius:24px; padding:28px } .cform textarea { resize:vertical }
+.ways { display:grid; gap:12px }
+.way { display:grid; grid-template-columns:52px 1fr; gap:4px 16px; align-items:center; background:var(--card); border-radius:20px; padding:18px 20px; transition:translate .25s, box-shadow .25s }
+.way .kico { grid-row:span 3; margin:0 } .way b { font-size:16px } .way span { color:var(--soft); font-size:14.5px; line-height:1.45 } .way small { color:var(--muted); font-size:13px }
+a.way:hover { translate:0 -3px; box-shadow:0 30px 50px -34px #0f111552 }
+.steps3 .pnum { display:block; margin-bottom:10px }
+.brands2 { grid-template-columns:1fr 1fr } .bigb { font-family:Manrope,Inter,system-ui,sans-serif; font-size:30px; letter-spacing:-1px; display:block; margin-bottom:8px } .brands2 .alink { display:inline-block; margin-top:10px; font-weight:600 }
+.pincheck { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; background:var(--card); border-radius:20px; padding:20px 22px; max-width:720px }
+.pincheck label { display:grid; gap:6px; font-size:13px; color:var(--muted) } .pincheck input { width:200px } .pincheck p { flex-basis:100%; margin:0 }
+.box.sent { margin:0; text-align:left; padding:32px }
+@media (max-width:860px) { .contact, .brands2 { grid-template-columns:1fr } .policy > section { grid-template-columns:44px 1fr } }

@@ -146,6 +146,10 @@ The client wanted the pages to feel "crazy, creative, premium" with images and v
 
 Client decision 2026-10-09: the "Shop by size" rows are off the home page (the size chips stay on the category pages, in the menus and in the TV size guide). A "calmer sizes" block at the end of the stylesheet caps the hero, headlines, marquee and numbers one step smaller than the first cinematic cut.
 
+### Info pages (2026-10-09)
+
+The client found the site "empty on some pages": About, Contact, Store locator, Shipping, Returns, Terms and Privacy were one placeholder paragraph each. `web/src/info.jsx` now renders each as a full page in the store's language: the category opener with its room clip, then (About) a live numbers band, the category tiles, the two brands, the four promises and the FAQ; (Contact) a working form that lands in the admin outbox plus "ways to reach us" cards (phone, email and address appear once `CONTACT` in `data.js` is filled); (Store locator) store cards from `STORES`, the pincode delivery check and the category tiles; (Shipping) the promises, the pincode check and a numbered policy; (Returns) three steps and a numbered policy; (Terms, Privacy) numbered plain-words policies written from how the site really works (prices checked on the server, no card details stored, one sign-in cookie, no tracking). Every page ends with the festive-offers banner. The empty cart and the 404 page show the Deals of the Day. The policy figures are in `POLICY` (draft: 7-day returns, 7 working-day refunds) for the client to confirm.
+
 ## 8. Motion
 
 Everything here switches off when the device asks for reduced motion.

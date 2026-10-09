@@ -97,6 +97,10 @@ server.listen(0, "127.0.0.1", async () => {
     for (let i = 0; i < 5; i++) await call("/api/otp/verify", "POST", { phone: "9876500000", code: wrongFor(r.data.demoCode) });
     assert.equal((await call("/api/otp/verify", "POST", { phone: "9876500000", code: r.data.demoCode })).status, 429); // five wrong tries burn the code
     assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => /sign-in code/.test(m.text) && m.sent === "recorded only"));
+    // contact form: a valid message lands in the admin outbox; a bad one is refused
+    assert.equal((await call("/api/contact", "POST", { name: "Asha", email: "asha@example.com", message: "Do you deliver to Pune?" })).status, 200);
+    assert.equal((await call("/api/contact", "POST", { name: "", email: "nope", message: "x" })).status, 400);
+    assert.ok((await call("/api/admin/outbox", "GET", null, admin)).data.messages.some(m => m.text.includes("Do you deliver to Pune?") && m.sent === "received"));
     // Google sign-in and SMS stay off until their keys are set
     assert.equal((await call("/api/login/google", "POST", { credential: "x" })).status, 503);
     assert.deepEqual((await call("/api/config")).data, { google: "", sms: false, mail: false, demoCodes: false });

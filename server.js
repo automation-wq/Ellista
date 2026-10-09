@@ -273,6 +273,14 @@ on("POST", "login/google", async ({ body, req, res }) => {
 });
 // what the pages need to know about the optional services
 on("GET", "config", () => ({ google: GOOGLE, sms: smsReady, mail: mailReady, demoCodes: OTP_DEMO }));
+// Contact form (page.html?p=contact): the message is recorded in the admin outbox ("Customer messages"), so the store sees it
+// even before an email provider is connected. ponytail: no rate limit beyond the body size; add one if the form gets abused.
+on("POST", "contact", ({ body }) => {
+  const name = String(body.name || "").trim().slice(0, 80), email = String(body.email || "").trim().slice(0, 120), message = String(body.message || "").trim().slice(0, 2000);
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 5) bad("Please give your name, a valid email and a message.");
+  record(`${name} (${email})`, "Contact form: " + message, "received");
+  return { ok: true };
+});
 
 // ===== delivery check: India Post's free pincode service (no key), answers cached for a day =====
 const pins = new Map(); // pin -> { at, data }

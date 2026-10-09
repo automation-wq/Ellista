@@ -76,4 +76,4 @@ The site is then at `https://<project-name>.vercel.app`, and every push to `main
 
 ## Before launch
 
-Replace the sample products, photos, logo, colours, and the placeholder Shipping, Returns, Terms and Privacy text with the client's own. Replace the sample bank offers (`BANK_OFFERS` in `web/src/data.js`) with the real terms and untick No Cost EMI on products that do not have it. Connect a payment gateway, and set the Twilio and Google variables (see `docs/TRD.md` section 11).
+Replace the sample products, photos, logo and colours with the client's own. The About, Contact, Store locator, Shipping, Returns, Terms and Privacy pages are full drafts written from how the store actually works (`web/src/info.jsx`): the client confirms the return and refund windows (`POLICY` in `web/src/data.js`) and fills in `CONTACT` and `STORES` there. Messages from the contact form appear in the admin page under Customer messages. Replace the sample bank offers (`BANK_OFFERS` in `web/src/data.js`) with the real terms and untick No Cost EMI on products that do not have it. Connect a payment gateway, and set the Twilio and Google variables (see `docs/TRD.md` section 11).
