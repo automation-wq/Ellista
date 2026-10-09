@@ -1182,3 +1182,53 @@ footer b { color:#fff } footer a { color:#b8bfc8 } footer a:hover { color:#fff }
 .slide .btn:not(.ghost):not([disabled]):hover { background:#f1efe9; box-shadow:0 14px 28px -16px #00000080 }
 .slide .btn.ghost { background:#ffffff14 }
 footer .fcols b { color:#fff }
+
+/* ===== Cinematic pass (2026-10-09): full-bleed hero, room clips behind the category stories and openers, images that unmask as
+   they scroll in, headline words that rise (riseWords in motion.js), tiles that arrive one after another, a big-type marquee and a
+   sticky "in focus" product story. Buttons return to the brand green: green acts, ink structures. ===== */
+html { overflow-x:clip }
+.btn:not(.ghost):not([disabled]) { background:var(--accent); box-shadow:none }
+.btn:not(.ghost):not([disabled]):hover { background:#066a4e; box-shadow:0 14px 28px -16px #08805f99 }
+.stepper { border-color:var(--accent) } .stepper button { color:var(--accent) } .stepper button:hover { background:var(--accent); color:#fff }
+.chip.on, .chip.sw.on { background:var(--accent) }
+/* hero edge to edge, text aligned with the page column */
+.hero { width:100vw; margin-left:calc(50% - 50vw); margin-top:0; border-radius:0; height:min(86vh,800px); box-shadow:none }
+.slide { padding-left:max(24px,calc(50vw - 598px)); padding-right:max(24px,calc(50vw - 598px)) }
+.slide .spot { right:max(24px,calc(50vw - 598px)); bottom:72px }
+.hero .arrow.prev { left:max(14px,calc(50vw - 660px)) } .hero .arrow.next { right:max(14px,calc(50vw - 660px)) }
+main > .num { margin-top:38px }
+/* headline words */
+main h2 .wl { display:inline } main h2 .w { display:inline-block; will-change:transform }
+/* tiles that Motion now staggers no longer need their CSS entrance */
+.reveal.in :is(.kcat, .bt, .offer) { animation:none }
+/* big-type marquee */
+main > .marqs { margin-top:clamp(48px,7vw,88px) }
+.marq { overflow:hidden; white-space:nowrap; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:22px 0; font-family:Manrope,Inter,system-ui,sans-serif; font-weight:800; font-size:clamp(36px,6.4vw,92px); letter-spacing:-2.5px; line-height:1 }
+.marq > div { display:inline-block; animation:tick 36s linear infinite } .marq:hover > div { animation-play-state:paused }
+.marq i { font-style:normal; display:inline-block; padding:0 .32em; color:transparent; -webkit-text-stroke:1.5px var(--ink) }
+.marq i:nth-child(even) { color:var(--ink); -webkit-text-stroke:0 }
+.marq i + i::before { content:"·"; color:var(--accent); -webkit-text-stroke:0; margin-right:.32em }
+/* in focus: sticky product, specifications scroll past it */
+.story { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,5vw,80px); align-items:start }
+.story .focusimg { position:sticky; top:calc(var(--hh,150px) + 24px); aspect-ratio:1; background:#fff; box-shadow:0 40px 70px -50px #0f111566; border-radius:32px; display:grid; place-items:center; overflow:hidden }
+.story .focusimg img { width:76%; height:76%; object-fit:contain; mix-blend-mode:multiply }
+.story .focusimg .kicker { position:absolute; left:28px; top:26px; color:var(--accent) }
+.story .steps h2 { margin-bottom:8px }
+.step { min-height:48vh; display:grid; align-content:center; border-top:1px solid var(--line); padding:28px 0 }
+.step small { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:700 }
+.step h3 { font-size:clamp(26px,3vw,46px); letter-spacing:-1.5px; line-height:1.06; margin-top:10px }
+.story .btn { justify-self:start; margin-top:12px }
+/* room clips behind the category stories (home) and the category opener */
+.cban .cph { z-index:-3 }
+.cban .bvid, .kv .bvid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 1.4s; z-index:-2 }
+.kv .kvimg { z-index:-3 }
+.cban .bvid.playing, .kv .bvid.playing { opacity:1 }
+.kv { min-height:clamp(320px,42vw,520px) }
+/* photos unmask as they scroll in (browsers with scroll-driven animations; others just show them) */
+@supports (animation-timeline:view()) {
+  .kcat, .bt, .cban, .kv, .story .focusimg, .brands .brand { animation:unmask linear both; animation-timeline:view(); animation-range:entry 0% entry 55% }
+  @keyframes unmask { from { clip-path:inset(10% 5% 10% 5% round 40px); scale:.97 } to { clip-path:inset(0 round 26px); scale:1 } }
+}
+@media (max-width:860px) { .story { grid-template-columns:1fr } .story .focusimg { position:static; aspect-ratio:4/3 } .step { min-height:0; padding:22px 0 } }
+@media (max-width:760px) { .hero { height:min(72vh,560px) } .slide { padding:24px } .slide .spot { right:16px } .marq { padding:14px 0; letter-spacing:-1.2px } }
+@media (prefers-reduced-motion:reduce) { .kcat, .bt, .cban, .kv, .story .focusimg, .brands .brand { animation:none } .marq > div { animation:none } }

@@ -65,7 +65,7 @@ export function Category() {
   const n = list.length, nText = n + " product" + (n === 1 ? "" : "s");
   return <>
     <div className="crumbs"><a href="index.html">Home</a> › {title}</div>
-    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg" style={{ backgroundImage: `url(img/${KV_IMG[cat]}.jpg)` }}></div><div><span className="eyebrow">{cat}</span><h1 className="explore">Explore {S.short} by {S.by}</h1><p>{S.note}</p></div></div>
+    {wishOnly ? <h1>My wishlist</h1> : S && KV_IMG[cat] ? <div className="kv"><div className="kvimg" style={{ backgroundImage: `url(img/${KV_IMG[cat]}.jpg)` }}></div>{CAT_CLIPS[cat] && <video className="bvid" muted loop playsInline preload="none" data-src={`img/${CAT_CLIPS[cat]}.mp4`} aria-hidden="true"></video>}<div><span className="eyebrow">{cat}</span><h1 className="explore">Explore {S.short} by {S.by}</h1><p>{S.note}</p></div></div>
       : <h1 className="explore">{S ? "Explore " + S.short + " by " + S.by : title}</h1>}
     {!wishOnly && <div className="finder"><div className="tiles">{tiles.map(([name, note, href, img, on]) => <a className={"tile" + (on ? " on" : "")} href={href} aria-current={on ? "page" : undefined} key={href}><span><b>{name}</b><small>{note}</small></span><img src={img} alt="" loading="lazy" /></a>)}</div></div>}
     {sizes.length > 0 && <nav className="sizetabs" aria-label={S.by}><a href={url({ size: "" })} className={f.size ? undefined : "on"} aria-current={f.size ? undefined : "page"}>All</a>{sizes.map(s => <a href={url({ size: s })} className={s === f.size ? "on" : undefined} aria-current={s === f.size ? "page" : undefined} key={s}>{s}</a>)}</nav>}

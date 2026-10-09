@@ -6,7 +6,7 @@ import { m } from "motion/react";
 import { useStore } from "./store.jsx";
 import { countUp } from "./motion.js";
 import { Card, Row, BankOffers, Ico } from "./components.jsx";
-import { DRAW_ICONS, CAT_SIZE, BANK_OFFERS, KV_IMG, TOP_FEATURES, GUIDES, FAQ, catSizes, catUrl, brandUrl, listUrl, off, starRow } from "./data.js";
+import { DRAW_ICONS, CAT_SIZE, BANK_OFFERS, KV_IMG, CAT_CLIPS, TOP_FEATURES, GUIDES, FAQ, catSizes, catUrl, brandUrl, listUrl, off, starRow } from "./data.js";
 
 // hero parts rise in one after another on a spring, and the headline staggers word by word (Motion variants)
 const RISE = { hide: { y: "115%", opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 280, damping: 28 } } };
@@ -37,6 +37,7 @@ export function Home() {
   const feats = c => (TOP_FEATURES[c] || []).slice(0, 2);
   const sizeOf = c => Object.hasOwn(CAT_SIZE, c) ? CAT_SIZE[c] : null;
   const quotes = P.flatMap(p => (p.reviews || []).map(r => ({ ...r, p }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6); // newest reviews across the catalogue
+  const focus = [...P].filter(p => p.specs && p.specs.length >= 4).sort((a, b) => off(b) - off(a))[0]; // the "in focus" story: the biggest deal with a full specification list
 
   const onHero = e => {
     if (e.target.dataset.i) show(+e.target.dataset.i);
@@ -65,6 +66,7 @@ export function Home() {
       <div className="dots">{SLIDES.map((_, i) => <button aria-label={"Slide " + (i + 1)} data-i={i} className={i === cur ? "on" : undefined} key={i}></button>)}</div>
     </div>
     <div className="num" ref={numRef}>{nums.map(([n, suf, t, s]) => <div key={t}><b><i data-n={n}>0</i>{suf}</b><span>{t}</span><small>{s}</small></div>)}</div>
+    <section className="marqs" aria-hidden="true"><div className="marq"><div>{[0, 1].map(r => <span key={r}>{[...CATS, ...BRANDS].map(w => <i key={w}>{w}</i>)}</span>)}</div></div></section>
 
     <section><h2>Shop by Category</h2><p className="lead">Every category we carry. Pick one and see each model, size by size.</p><div className="kcats">{CATS.map(c => { const ps = inCat(c), low = lowest(c);
       return <a className="kcat" href={catUrl(c)} key={c} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><div className="kshade"></div>
@@ -84,10 +86,14 @@ export function Home() {
       {emiFrom > 0 && <a className="bt glass" href="offers.html" style={{ gridColumn: "span 2" }}><span className="kicker">No Cost EMI</span><h3>From {money(emiFrom)}/month</h3><p>3, 6 or 9 instalments on participating bank credit cards, no extra interest.</p><u>See bank offers →</u></a>}
     </div></section>
 
+    {focus && <section className="story"><div className="focusimg"><span className="kicker">{focus.brand}</span><img src={focus.img} alt="" loading="lazy" /></div>
+      <div className="steps"><h2>In focus</h2><p className="lead">{focus.brand} {focus.name}: its specifications, one at a time.</p>
+        {(focus.specs || []).slice(0, 4).map(([k, v]) => <m.div className="step" key={k} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "0px 0px -20% 0px" }} transition={{ type: "spring", stiffness: 160, damping: 26 }}><small>{k}</small><h3>{v}</h3></m.div>)}
+        <a className="btn" href={"product.html?id=" + focus.id}>View this {focus.cat === "Televisions" ? "TV" : "model"} · {money(focus.price)}</a></div></section>}
     <section><h2>Deals of the Day <a href="category.html?sort=off">View all</a></h2><p className="lead">The biggest discounts across the store right now.</p><div className="grid">{deals.map((p, i) => <Card p={p} i={i} key={p.id} />)}</div></section>
 
     {CATS.map(c => { const S = sizeOf(c), list = inCat(c); return list.length ? <section className="cblock" key={c}>
-      <a className="cban" href={catUrl(c)}><img className="cph" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" /><div><span className="kicker">{c}</span><h2>{S ? S.note : c}</h2>
+      <a className="cban" href={catUrl(c)}><img className="cph" src={`img/${KV_IMG[c] || "kv-tv"}.jpg`} alt="" loading="lazy" />{CAT_CLIPS[c] && <video className="bvid" muted loop playsInline preload="none" data-src={`img/${CAT_CLIPS[c]}.mp4`} aria-hidden="true"></video>}<div><span className="kicker">{c}</span><h2>{S ? S.note : c}</h2>
         <p>From {money(lowest(c))} · up to {maxOff(c)}% off · {list.length} model{list.length === 1 ? "" : "s"}</p><u>Explore {S ? S.short : c} →</u></div></a>
       <div className="grid cgrid">{list.slice(0, 4).map((p, i) => <Card p={p} i={i} key={p.id} />)}{list.length < 4 && <a className="morecard" href={catUrl(c)} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><span className="kicker">{c}</span><b>See all {S ? S.short : c}</b><small>All {list.length} models with filters and size tabs</small><u>View all →</u></a>}</div>
     </section> : null; })}

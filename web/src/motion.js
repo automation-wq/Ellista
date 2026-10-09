@@ -1,6 +1,6 @@
 // Page motion on the rendered DOM, built on Motion (motion.dev): reveals, numbers that count up, room clips, strips, scroll
 // chrome and the fly-to-cart. Each helper is safe to call again after a page draws more content.
-import { animate, inView } from "motion";
+import { animate, inView, stagger } from "motion";
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 export const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -12,9 +12,31 @@ export function reveal() {
     if (el.classList.contains("reveal")) return;
     el.classList.add("reveal");
     if (reduced()) return el.classList.add("in");
-    Object.assign(el.style, { opacity: 0, transform: "translateY(10px)" }); // starts hidden and a little low, so nothing flashes or jumps before the animation
-    inView(el, () => { el.classList.add("in"); animate(el, { opacity: [0, 1], y: [10, 0] }, { duration: .7, ease: EASE }); }, { margin: "0px 0px -40px" });
+    // a section the address points at (#features, #guide, #compare) only fades, so the deep-link scroll lands exactly on it
+    const dy = /^#[\w-]+$/.test(location.hash) && (el.id === location.hash.slice(1) || el.querySelector(location.hash)) ? 0 : 18;
+    Object.assign(el.style, { opacity: 0, transform: `translateY(${dy}px)` }); // starts hidden and a little low, so nothing flashes or jumps before the animation
+    inView(el, () => {
+      el.classList.add("in");
+      animate(el, { opacity: [0, 1], y: [dy, 0] }, { duration: .7, ease: EASE });
+      riseWords($(":scope > h2", el));
+      const tiles = $$(TILES, el).filter(t => !t.closest(".card")); // cards animate themselves (Card in components.jsx)
+      if (tiles.length) animate(tiles, { opacity: [0, 1], y: [22, 0] }, { delay: stagger(.06, { startDelay: .12 }), duration: .65, ease: EASE });
+    }, { margin: "0px 0px -40px" });
   });
+}
+
+// the tiles that arrive one after another when their section appears
+const TILES = ".num > div, .kcat, .sizerow, .bt, .brands .brand, .quote, .offer, .why > div, .faqs details, .tile, .step, .marq";
+// a section headline rises word by word (the words are wrapped once; the wrapper is one flex item, so a "View all" link stays on the right)
+function riseWords(h) {
+  if (!h || h.dataset.words) return;
+  h.dataset.words = "1";
+  [...h.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim()).forEach(n => {
+    const wl = document.createElement("span"); wl.className = "wl";
+    n.textContent.split(/(\s+)/).forEach(t => { if (!t) return; if (/^\s+$/.test(t)) wl.append(t); else { const w = document.createElement("span"); w.className = "w"; w.textContent = t; wl.append(w); } });
+    n.replaceWith(wl);
+  });
+  animate($$(".w", h), { opacity: [0, 1], y: ["70%", "0%"] }, { delay: stagger(.06), duration: .6, ease: EASE });
 }
 
 // numbers roll up from 0 the first time they scroll into view
