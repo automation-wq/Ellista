@@ -1232,3 +1232,18 @@ main > .marqs { margin-top:clamp(48px,7vw,88px) }
 @media (max-width:860px) { .story { grid-template-columns:1fr } .story .focusimg { position:static; aspect-ratio:4/3 } .step { min-height:0; padding:22px 0 } }
 @media (max-width:760px) { .hero { height:min(72vh,560px) } .slide { padding:24px } .slide .spot { right:16px } .marq { padding:14px 0; letter-spacing:-1.2px } }
 @media (prefers-reduced-motion:reduce) { .kcat, .bt, .cban, .kv, .story .focusimg, .brands .brand { animation:none } .marq > div { animation:none } }
+
+/* calmer sizes (2026-10-09, client: "some things have gone big"): the hero, headlines, marquee, numbers and the story steps step down a size */
+.hero { height:min(76vh,700px) }
+.slide h1 { font-size:clamp(34px,5.4vw,66px); letter-spacing:-2px }
+.slide p { font-size:clamp(16px,1.4vw,19px) }
+main h2 { font-size:clamp(28px,3.4vw,42px); letter-spacing:-1.5px }
+.lead { font-size:clamp(15.5px,1.2vw,18px) }
+.num b { font-size:clamp(28px,3vw,40px); letter-spacing:-1.8px }
+.marq { font-size:clamp(30px,4.8vw,64px); padding:16px 0; letter-spacing:-2px }
+.step h3 { font-size:clamp(24px,2.6vw,40px) }
+.step { min-height:40vh }
+.kv { min-height:clamp(300px,36vw,460px) }
+.kcat { height:clamp(220px,22vw,280px) }
+.cban { min-height:320px }
+@media (max-width:760px) { .hero { height:min(64vh,520px) } .slide h1 { font-size:clamp(32px,9vw,42px) } main h2 { font-size:clamp(26px,7.5vw,30px) } }

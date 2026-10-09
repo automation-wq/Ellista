@@ -72,11 +72,6 @@ export function Home() {
       return <a className="kcat" href={catUrl(c)} key={c} style={{ backgroundImage: `url(img/${KV_IMG[c] || "kv-tv"}.jpg)` }}><div className="kshade"></div>
         <div className="ktext"><b>{c}</b><small>{ps.length} model{ps.length === 1 ? "" : "s"} · from {money(low)}</small><u>Shop now →</u></div></a>; })}</div></section>
 
-    <section><h2>Shop by size</h2><p className="lead">Start with the size that fits your room, then choose the model.</p><div className="sizerows">{CATS.map(c => { const { S, all, sizeOf: sz } = catSizes(P, c); if (!S || !all.length) return null;
-      const from = s => Math.min(...inCat(c).filter(p => (sz(p) || {}).n === s.n).map(p => p.price));
-      return <div className="sizerow" key={c}><b>{c}<small>by {S.by.toLowerCase()}</small></b>
-        {[...all].sort((a, b) => a.n - b.n).map(s => <a className="chip sw" href={listUrl({ cat: c, size: s.label })} key={s.label}><b>{s.label.replace(/ TVs$/, "")}</b><small>from {money(from(s))}</small></a>)}
-        {GUIDES[c] && <a className="alink" href={catUrl(c) + "#guide"}>Not sure? Open the {GUIDES[c].nav} →</a>}</div>; })}</div></section>
 
     <section><h2>Built for your home</h2><p className="lead">The features that matter most in each category, in plain words.</p><div className="bento">
       {CATS.map((c, i) => { const f = feats(c), S = sizeOf(c); return <a className={"bt ph" + (i === 0 ? " big" : "")} href={catUrl(c)} key={c}>
